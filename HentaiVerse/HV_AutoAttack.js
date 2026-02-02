@@ -45,6 +45,19 @@ const _1h = 60 * _1m;
 const _1d = 24 * _1h;
 
 try {
+    // 按钮组到底部的距离
+    const btnTBPx = localStorage.getItem('floatBtnGroupTop') ?? 10;
+    const btnLRPx = 10;
+
+    // 创建浮动按钮组
+    hvAADiv = gE('body').appendChild(cE('div'));
+    hvAADiv.id = 'hvAADiv';
+    hvAADiv.className = 'hvAADiv';
+    hvAADiv.style.cssText = `z-index:999;position:fixed;margin:10px;` +
+        `right:${btnLRPx}px;top:${btnTBPx}px;` +
+        `text-align:center;`
+    console.log("创建hvAADiv")
+
     const isFrame = window.self !== window.top;
     if (isFrame) {
         if (!window.top.location.href.match(`/equip/`) && (gE('#riddlecounter') || !gE('#navbar'))) {
@@ -342,7 +355,7 @@ try {
         // 倒计时
         asyncOnIdle();
 
-        const hvAAPauseUI = document.body.appendChild(cE('div'));
+        const hvAAPauseUI = gE('#hvAADiv').appendChild(cE('div'));
         hvAAPauseUI.classList.add('hvAAPauseUI');
         setPauseUI(hvAAPauseUI);
 
@@ -452,13 +465,20 @@ try {
         const button = parent.appendChild(cE('button'));
         // button.innerHTML = '<l0>暂停</l0><l1>暫停</l1><l2>Pause</l2>';
         button.innerHTML = '<l0>🟢 进行中</l0><l1>暫停</l1><l2>Pause</l2>';
+        button.className = 'pauseChange';
+        button.onclick = pauseChange;
+        button.classList.add('my_button');
+        button.classList.add('green');
+
         if (getValue('disabled')) { // 如果禁用
             document.title = _alert(-1, 'hvAutoAttack暂停中', 'hvAutoAttack暫停中', 'hvAutoAttack Paused');
             // button.innerHTML = '<l0>继续</l0><l1>繼續</l1><l2>Continue</l2>';
-            button.innerHTML = '<l0>⏸️已暂停</l0><l1>繼續</l1><l2>Continue</l2>';
+            button.innerHTML = '<l0>⏸️ 已暂停</l0><l1>繼續</l1><l2>Continue</l2>';
+            button.classList.remove('green');
+            button.classList.add('blue');
         }
-        button.className = 'pauseChange';
-        button.onclick = pauseChange;
+
+        parent.appendChild(cE('br'));
     }
     function setPauseHotkey() {
         if (!g('option').pauseHotkey) {
@@ -481,13 +501,19 @@ try {
         const button = parent.appendChild(cE('button'));
         // button.innerHTML = '<l0>暂停</l0><l1>暫停</l1><l2>Pause</l2>';
         button.innerHTML = '<l0>⚔️ 进行中</l0><l1>暫停</l1><l2>Pause</l2>';
+
+        button.className = 'pauseEncounter';
+        button.onclick = pauseEncounter;
+        button.classList.add('my_button');
+        button.classList.add('green');
         if (!g('option').encounter) { // 如果禁用
             document.title = _alert(-1, 'hvAutoAttack暂停中', 'hvAutoAttack暫停中', 'hvAutoAttack Paused');
             // button.innerHTML = '<l0>继续</l0><l1>繼續</l1><l2>Continue</l2>';
             button.innerHTML = '<l0>🛡️ 已暂停</l0><l1>繼續</l1><l2>Continue</l2>';
+
+            button.classList.remove('green');
+            button.classList.add('blue');
         }
-        button.className = 'pauseEncounter';
-        button.onclick = pauseEncounter;
     }
 
     // 测试按钮
@@ -722,11 +748,14 @@ try {
         const cssContent = [
             // hvAA
             'l0,l1,l01,l2{display:none;}', // l0: 简体 l1: 繁体 l01:简繁体共用 l2: 英文
-            '#hvAABox2{position:absolute;left:1075px;padding-top: 6px;}',
+            '#hvAABox2{position:absolute;left:1075px;padding-bottom: 6px;}',
+            '#hvAABox2>button{margin-top: 6px;}',
             '.hvAALog{font-size:20px;}',
-            '.hvAAPauseUI{top:30px;left:1246px;position:absolute;z-index:9999;width:80px;}',
-            '.hvAAPauseUI>button{margin-top: 10px;padding:4px;}',
-            '.hvAAButton{top:5px;left:1252px;position:absolute;z-index:9999;cursor:pointer;width:24px;height:24px;background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAADi0lEQVRIiZVWPYgUZxj+dvGEk7vsNdPYCMul2J15n+d991PIMkWmOEyMyRW2FoJIUojYp5ADFbZJkyISY3EqKGpgz+Ma4bqrUojICaIsKGIXSSJcsZuD3RT3zWZucquXDwYG5n2f9/d5vnFuHwfAZySfAXgN4DXJzTiOj+3H90OnkmXZAe/9FMm3JJ8AuBGepyRfle2yLDvgnKt8EDVJkq8B3DGzjve+1m63p0n2AVzJbUh2SG455yre+5qZ/aCq983sxMfATwHYJvlCVYckHwFYVdURgO8LAS6RHJJcM7N1VR0CeE5yAGBxT3AR+QrA3wA20tQOq+pFkgOS90Tk85J51Xs9qaorqjoAcC6KohmSGyQHcRx/kbdv7AHgDskXaWqH0zSddc5Voyia2SOXapqmswsLvpam6ez8/Pwn+YcoimYAvARw04XZ5N8qZtZR1aGqXnTOVSd0cRd42U5EzqvqSFWX2u32tPd+yjnnXNiCGslHJAf7ybwM7r2vAdgWkYdZls157w+NK/DeT7Xb7WkAqyTvlZHjOD5oxgtmtqrKLsmze1VJsquqKwsLO9vnnKvkJHpLsq+qo/JAd8BtneTvqvqTiPwoIu9EZKUUpGpmi2Y2UtU+yTdJkhx1JJ8FEl0pruK/TrwA4F2r1WrkgI1G4wjJP0XkdLF9WaZzZnZZVa8GMj5xgf43JvXczFZbLb1ebgnJn0nenjQbEVkG0JsUYOykyi6Aa+XoQTJuTRr8OADJzVBOh+SlckYkz5L8Q0TquXOj0fhURN6r6pkSeAXAUsDaJPnYxXF8jOQrklskh97ryZJTVURWAPwF4DqAX0TkvRl/zTKdK2aeJMnxICFbAHrNZtOKVVdIrrVa2t1jz6sicprkbQC3VPVMGTzMpQvgQY63i8lBFddVdVCk/6TZlMFzopFci+P44H+YHCR3CODc/wUvDPY7ksMg9buZrKr3ATwvyoT3vrafzPP3er1eA9Azs7tjJhcqOBHkeSOKohkROR9K7prZYqnnlSRJjofhb4vIt/V6vUbyN1Xtt1qtb1zpZqs45xyAxXAnvCQ5FJGHqrpiZiMzu5xnHlZxCOABybXw3gvgp/Zq3/gA+BLATVVdyrJsbods2lfVq7lN4crMtapjZndD5pPBixWFLTgU7uQ3AJ6KyLKILAdy9sp25bZMBC//JSRJcjQIYg9Aj+TjZrNp+/mb+Ad711sdZZ1k/QAAAABJRU5ErkJggg==) center no-repeat transparent;}',
+            '.hvAAPauseUI{position:sticky;z-index:9999;}',
+            // '.hvAAPauseUI{top:30px;left:1246px;position:sticky;z-index:9999;width:80px;}',
+            '.hvAAPauseUI>button{margin-top: 10px;}',
+            '.hvAAButton{position:sticky;z-index:9999;cursor:pointer;width:auto;height:32px;background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAADi0lEQVRIiZVWPYgUZxj+dvGEk7vsNdPYCMul2J15n+d991PIMkWmOEyMyRW2FoJIUojYp5ADFbZJkyISY3EqKGpgz+Ma4bqrUojICaIsKGIXSSJcsZuD3RT3zWZucquXDwYG5n2f9/d5vnFuHwfAZySfAXgN4DXJzTiOj+3H90OnkmXZAe/9FMm3JJ8AuBGepyRfle2yLDvgnKt8EDVJkq8B3DGzjve+1m63p0n2AVzJbUh2SG455yre+5qZ/aCq983sxMfATwHYJvlCVYckHwFYVdURgO8LAS6RHJJcM7N1VR0CeE5yAGBxT3AR+QrA3wA20tQOq+pFkgOS90Tk85J51Xs9qaorqjoAcC6KohmSGyQHcRx/kbdv7AHgDskXaWqH0zSddc5Voyia2SOXapqmswsLvpam6ez8/Pwn+YcoimYAvARw04XZ5N8qZtZR1aGqXnTOVSd0cRd42U5EzqvqSFWX2u32tPd+yjnnXNiCGslHJAf7ybwM7r2vAdgWkYdZls157w+NK/DeT7Xb7WkAqyTvlZHjOD5oxgtmtqrKLsmze1VJsquqKwsLO9vnnKvkJHpLsq+qo/JAd8BtneTvqvqTiPwoIu9EZKUUpGpmi2Y2UtU+yTdJkhx1JJ8FEl0pruK/TrwA4F2r1WrkgI1G4wjJP0XkdLF9WaZzZnZZVa8GMj5xgf43JvXczFZbLb1ebgnJn0nenjQbEVkG0JsUYOykyi6Aa+XoQTJuTRr8OADJzVBOh+SlckYkz5L8Q0TquXOj0fhURN6r6pkSeAXAUsDaJPnYxXF8jOQrklskh97ryZJTVURWAPwF4DqAX0TkvRl/zTKdK2aeJMnxICFbAHrNZtOKVVdIrrVa2t1jz6sicprkbQC3VPVMGTzMpQvgQY63i8lBFddVdVCk/6TZlMFzopFci+P44H+YHCR3CODc/wUvDPY7ksMg9buZrKr3ATwvyoT3vrafzPP3er1eA9Azs7tjJhcqOBHkeSOKohkROR9K7prZYqnnlSRJjofhb4vIt/V6vUbyN1Xtt1qtb1zpZqs45xyAxXAnvCQ5FJGHqrpiZiMzu5xnHlZxCOABybXw3gvgp/Zq3/gA+BLATVVdyrJsbods2lfVq7lN4crMtapjZndD5pPBixWFLTgU7uQ3AJ6KyLKILAdy9sp25bZMBC//JSRJcjQIYg9Aj+TjZrNp+/mb+Ad711sdZZ1k/QAAAABJRU5ErkJggg==) center no-repeat transparent;}',
+            // '.hvAAButton{top:5px;left:1252px;position:sticky;z-index:9999;cursor:pointer;width:24px;height:24px;background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAADi0lEQVRIiZVWPYgUZxj+dvGEk7vsNdPYCMul2J15n+d991PIMkWmOEyMyRW2FoJIUojYp5ADFbZJkyISY3EqKGpgz+Ma4bqrUojICaIsKGIXSSJcsZuD3RT3zWZucquXDwYG5n2f9/d5vnFuHwfAZySfAXgN4DXJzTiOj+3H90OnkmXZAe/9FMm3JJ8AuBGepyRfle2yLDvgnKt8EDVJkq8B3DGzjve+1m63p0n2AVzJbUh2SG455yre+5qZ/aCq983sxMfATwHYJvlCVYckHwFYVdURgO8LAS6RHJJcM7N1VR0CeE5yAGBxT3AR+QrA3wA20tQOq+pFkgOS90Tk85J51Xs9qaorqjoAcC6KohmSGyQHcRx/kbdv7AHgDskXaWqH0zSddc5Voyia2SOXapqmswsLvpam6ez8/Pwn+YcoimYAvARw04XZ5N8qZtZR1aGqXnTOVSd0cRd42U5EzqvqSFWX2u32tPd+yjnnXNiCGslHJAf7ybwM7r2vAdgWkYdZls157w+NK/DeT7Xb7WkAqyTvlZHjOD5oxgtmtqrKLsmze1VJsquqKwsLO9vnnKvkJHpLsq+qo/JAd8BtneTvqvqTiPwoIu9EZKUUpGpmi2Y2UtU+yTdJkhx1JJ8FEl0pruK/TrwA4F2r1WrkgI1G4wjJP0XkdLF9WaZzZnZZVa8GMj5xgf43JvXczFZbLb1ebgnJn0nenjQbEVkG0JsUYOykyi6Aa+XoQTJuTRr8OADJzVBOh+SlckYkz5L8Q0TquXOj0fhURN6r6pkSeAXAUsDaJPnYxXF8jOQrklskh97ryZJTVURWAPwF4DqAX0TkvRl/zTKdK2aeJMnxICFbAHrNZtOKVVdIrrVa2t1jz6sicprkbQC3VPVMGTzMpQvgQY63i8lBFddVdVCk/6TZlMFzopFci+P44H+YHCR3CODc/wUvDPY7ksMg9buZrKr3ATwvyoT3vrafzPP3er1eA9Azs7tjJhcqOBHkeSOKohkROR9K7prZYqnnlSRJjofhb4vIt/V6vUbyN1Xtt1qtb1zpZqs45xyAxXAnvCQ5FJGHqrpiZiMzu5xnHlZxCOABybXw3gvgp/Zq3/gA+BLATVVdyrJsbods2lfVq7lN4crMtapjZndD5pPBixWFLTgU7uQ3AJ6KyLKILAdy9sp25bZMBC//JSRJcjQIYg9Aj+TjZrNp+/mb+Ad711sdZZ1k/QAAAABJRU5ErkJggg==) center no-repeat transparent;}',
             // '#hvAABox{left:calc(50% - 350px);top:50px;font-size:16px!important;z-index:4;width:700px;height:538px;position:absolute;text-align:left;background-color:#E3E0D1;border:1px solid #000;border-radius:10px;font-family:"Microsoft Yahei";}',
             '#hvAABox{left:calc(10%);top:50px;font-size:16px!important;z-index:4;width:calc(80%);height:calc(80%);position:absolute;text-align:left;background-color:#E3E0D1;border:1px solid #000;border-radius:10px;font-family:"Microsoft Yahei";}',
             '.hvAATablist{position:relative;left:14px;}',
@@ -765,7 +794,8 @@ try {
             // '.hvAAButtonBox{position:relative;top:468px;}',
             '.hvAAButtonBox{position:relative;top:calc(100% - 85px);}',
             '.hvAAButtonBox>button{margin:0 5px;}',
-            '.encounterUI{margin-top: 20px; margin-left: 5px; font-weight:bold;font-size:10pt;position:absolute;top:98px;left:1242px;text-decoration:none;}',
+            '.encounterUI{margin-top:10px;font-weight:bold;font-size:10pt;position:sticky;text-decoration:none;}',
+            // '.encounterUI{margin-top: 20px; margin-left: 5px; font-weight:bold;font-size:10pt;position:absolute;top:98px;left:1242px;text-decoration:none;}',
             '.quickSiteBar{position:absolute;top:0px;left:1290px;font-size:18px;text-align:left;width:165px;height:calc(100% - 10px);display:flex;flex-direction:column;flex-wrap:wrap;}',
             '.quickSiteBar>span{display:block;max-height:24px;overflow:hidden;text-overflow:ellipsis;}',
             '.quickSiteBar>span>a{text-decoration:none;}',
@@ -791,6 +821,14 @@ try {
             '#pane_log{height:403px;}',
             '.tlbQRA{text-align:left;font-weight:bold;}', // 标记已检测的日志行
             '.tlbWARN{text-align:left;font-weight:bold;color:red;font-size:20pt;}', // 标记检测出异常的日志行
+            '.my_button {border-radius: 10em; color: #ecf0f1; font-color: #ecf0f1; font-family: "微软雅黑"; text-decoration: none; text-align: center; line-height: 28px; height: 28px; padding: 0 15px; margin: 0; display: inline-block; appearance: none; cursor: pointer; border: none; -webkit-box-sizing: border-box; -moz-box-sizing: border-box; box-sizing: border-box; -webkit-transition-property: all; transition-property: all; -webkit-transition-duration: .3s; transition-duration: .3s; height: 28px; padding: 0 15px; }',
+            ".my_button.green {background: linear-gradient(to right, #08705a, #25a88f, #2ecc71); }",
+            ".my_button.blue {background: linear-gradient(to right, #2e6183, #589eca, #6bc0ff); }",
+            ".my_button.red {background: linear-gradient(to right,#700f46,#d61361,#f41445,#fc1e39,#ff4f28,#ffb11e); }",
+            ".my_button.orange {background: linear-gradient(to right, #701a00, #d8420f, #ff9e1e, #ffd944); }",
+            ".my_button.yellow {background: linear-gradient(to right, #D9E021,#FCEE21,#f5ce62,#FBB03B); }",
+            ".my_button.gray {background: linear-gradient(to right, #5e5e5e, #878787); }",
+            ".my_button.translucence {color: #888888; background: linear-gradient(to right, rgba(0, 0, 0, 0.2), rgba(70, 70, 70, 0.2), rgba(135, 135, 135, 0.2)); }",
             // 怪物标号用数字替代字母，目前弃用
             // '#pane_monster{counter-reset:order;}',
             // '.btm2>div:nth-child(1):before{font-size:23px;font-weight:bold;text-shadow:1px 1px 2px;content:counter(order);counter-increment:order;}',
@@ -798,11 +836,17 @@ try {
         ].join('');
         globalStyle.textContent = cssContent;
         optionButton(lang);
+        getEncounterUI();
     }
 
     function optionButton(lang) { // 配置按钮
-        const optionButton = gE('body').appendChild(cE('div'));
+        hvAADiv = gE('#hvAADiv')
+
+        const optionButton = gE('#hvAADiv').appendChild(cE('div'));
+        optionButton.innerHTML = '⚙️';
         optionButton.className = 'hvAAButton';
+        optionButton.classList.add('my_button');
+        optionButton.classList.add('gray');
         optionButton.onclick = function () {
             if (gE('#hvAABox')) {
                 gE('#hvAABox').style.display = (gE('#hvAABox').style.display === 'none') ? 'block' : 'none';
@@ -812,6 +856,73 @@ try {
                 gE('select[name="lang"]').value = lang;
             }
         };
+        gE('#hvAADiv').appendChild(cE('br'));
+
+        let isDragging = false;
+        let startY = 0;
+        let startTop = 0;
+        let dragDistance = 0; // 记录拖拽位移，区分拖拽和点击
+        const DRAG_THRESHOLD = 5; // 拖拽阈值：超过5px判定为拖拽，否则为点击
+
+        // 鼠标按下：开始拖拽
+        optionButton.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            dragDistance = 0; // 重置位移
+            // 记录初始位置（鼠标Y坐标、容器当前top值）
+            startY = e.clientY;
+            startTop = parseFloat(hvAADiv.style.top) || (window.innerHeight / 2);
+            // 1. 阻止事件冒泡：避免传递到按钮
+            e.stopPropagation();
+            // 2. 阻止默认行为：避免选中文字、触发点击等
+            e.preventDefault();
+        });
+
+        // 鼠标移动：更新位置
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            // 计算偏移量（仅垂直方向）
+            const offsetY = e.clientY - startY;
+            dragDistance = Math.abs(offsetY); // 记录位移绝对值
+            const newTop = startTop + offsetY;
+            // 限制拖拽范围（不超出页面可视区域）
+            const maxTop = window.innerHeight - hvAADiv.offsetHeight;
+            const finalTop = Math.max(0, Math.min(newTop, maxTop));
+            // 更新容器位置
+            hvAADiv.style.top = `${finalTop}px`;
+            hvAADiv.style.transform = 'none';
+        });
+
+        // 鼠标松开：结束拖拽并保存位置
+        document.addEventListener('mouseup', (e) => {
+            if (isDragging) {
+                isDragging = false;
+                // 判断是否是拖拽行为（位移超过阈值）
+                console.log(dragDistance)
+                if (dragDistance > DRAG_THRESHOLD) {
+                    // 是拖拽：保存位置，阻止事件冒泡（避免触发按钮点击）
+                    const currentTop = hvAADiv.style.top.replace('px', '');
+                    localStorage.setItem('floatBtnGroupTop', currentTop);
+
+                    e.stopPropagation();
+                }
+            }
+        });
+
+        // 鼠标离开拖拽区但未松开时，也结束拖拽（边界处理）
+        document.addEventListener('mouseleave', () => {
+            isDragging = false;
+        });
+    }
+
+    function getEncounterUI() {
+        if(!gE('.encounterUI')) {
+            encounterUI = gE('#hvAADiv').appendChild(cE('a'));
+            encounterUI.className = 'encounterUI'
+            encounterUI.id = 'encounterUI'
+            encounterUI.href = 'https://e-hentai.org/news.php?encounter';
+            return encounterUI;
+        }
+        return gE('.encounterUI')
     }
 
     function optionBox() { // 配置界面
@@ -840,6 +951,7 @@ try {
             '  <span name="Rule"><l0>攻击规则</l0><l1>攻擊規則</l1><l2>Attack Rule</l2></span>',
             '  <span name="Drop"><input id="dropMonitor" type="checkbox"><l0>掉落监测</l0><l1>掉落監測</l1><l2>Drops Tracking</l2></span>',
             '  <span name="Usage"><input id="recordUsage" type="checkbox"><l0>数据记录</l0><l1>數據記錄</l1><l2>Usage Tracking</l2></span>',
+            '  <span name="Summary"><l0>数据汇总</l0><l1>數據汇总</l1><l2>Summary</l2></span>',
             '  <span name="Tools"><l0>工具</l0><l1>工具</l1><l2>Tools</l2></span>',
             '  <span name="Feedback"><l01>反馈</l01><l2>Feedback</l2></span>',
             '</div>',
@@ -1162,6 +1274,9 @@ try {
             '<div class="hvAATab hvAACenter" id="hvAATab-Usage">',
             '  <span class="hvAATitle"><l0>数据记录</l0><l1>數據記錄</l1><l2>Usage Tracking</l2></span><button class="reRecordUsage"><l01>重置</l01><l2>Reset</l2></button>',
             '  <table></table></div>',
+            '<div class="hvAATab hvAACenter" id="hvAATab-Summary">',
+            '  <span class="hvAATitle"><l0>数据汇总</l0><l1>數據汇总</l1><l2>Summary</l2></span></button>',
+            '  <table></table></div>',
 
             '<div class="hvAATab hvAACenter" id="hvAATab-Tools">',
             '  <div><span class="hvAATitle"><l0>当前状况</l0><l1>當前狀況</l1><l2>Current status</l2></span>: ',
@@ -1222,7 +1337,7 @@ try {
 
                     console.log(dropOld)
                     // 先处理数据
-                    const dropNew = dealDrop(dropOld)
+                    const dropNew = dealDrop(dropOld, false)
 
                     dropNew.reverse();
                     _html = `${_html}<tr class="hvAATh"><td class="selectTable"></td>`;
@@ -1283,7 +1398,7 @@ try {
                     console.log(statsOld)
 
                     // 先处理数据
-                    const statsNew = dealStats(statsOld)
+                    const statsNew = dealStats(statsOld, false)
 
                     statsNew.reverse();
                     console.log(statsNew)
@@ -1315,6 +1430,92 @@ try {
                 }
                 _html = `${_html}</tbody>`;
                 gE('#hvAATab-Usage>table').innerHTML = _html;
+            } else if (name === 'Summary') {
+                console.log("Summary")
+                const translation = {
+                    drop: '<l0>掉落</l0><l1>掉落</l1><l2>掉落</l2>',
+                    stats: '<l0>使用</l0><l1>使用</l1><l2>使用</l2>',
+                    sum: '<l0>合计</l0><l1>合计</l1><l2>合计</l2>',
+                };
+                const dropOld = getValue('dropOld', true) || [];
+                const statsOld = getValue('statsOld', true) || [];
+                const dropNew = dealDrop(dropOld, true)
+                const statsNew = dealStats(statsOld, true)
+
+                let objs = {}
+                for(let drop of dropNew) {
+                    let newDrops = {}
+                    Object.keys(drop).forEach((i) => {
+                        if(i.startsWith("Health ") || i.startsWith("Mana ") || i.startsWith("Spirit ")) {
+                            newDrops[i] = drop[i]
+                        }
+                    })
+                    if(Object.keys(newDrops).length > 0) {
+                        let _obj = objs[drop.date] ?? {__name: drop.date, stats: {}, drop: {}, sum: {}}
+                        _obj.drop = newDrops
+                        _obj.sum = Object.assign({}, newDrops);
+
+                        objs[drop.date] = _obj;
+                    }
+                }
+                for(let stats of statsNew) {
+                    let newStats = {}
+                    let items = stats.items
+                    Object.keys(items).forEach((i) => {
+                        if(i.startsWith("Health ") || i.startsWith("Mana ") || i.startsWith("Spirit ")) {
+                            newStats[i] = items[i]
+                        }
+                    })
+                    if(Object.keys(newStats).length > 0) {
+                        let _obj = objs[stats.date] ?? {__name: stats.date, stats: {}, drop: {}, sum: {}}
+                        _obj.stats = newStats
+
+                        for(let key of Object.keys(newStats)) {
+                            _obj.sum[key] = (_obj.sum[key] ?? 0) - newStats[key]
+                        }
+                        objs[stats.date] = _obj;
+                    }
+                }
+
+                console.log(objs)
+                console.log(Object.values(objs))
+                let list = Object.values(objs)
+
+                _html = '<tbody>';
+
+                list.reverse();
+                console.log(list)
+                _html = `${_html}<tr class="hvAATh"><td class="selectTable"></td>`;
+                list.forEach((_obj) => {
+                    _html = `${_html}<td>${_obj.__name}</td>`;
+                });
+                _html = `${_html}</tr>`;
+
+                Object.keys(translation).forEach((i) => {
+                    if (i === '__name') {
+                        return;
+                    }
+                    _html = `${_html}<tr class="hvAATh"><td colspan="${list.length + 1}">${translation[i]}</td></tr>`;
+                    getKeys(list, i).forEach((key) => {
+                        if(key.includes("Gem")) {
+                            return;
+                        }
+                        _html = `${_html}<tr><td>${key}</td>`;
+                        list.forEach((list) => {
+                            if (key in list[i]) {
+                                // 不同物品展示不同样式
+                                let style = keyToStyle(key)
+                                _html = `${_html}<td style="${style}">${list[i][key]}</td>`;
+                            } else {
+                                _html = `${_html}<td></td>`;
+                            }
+                        });
+                    });
+                });
+
+                _html = `${_html}</tbody>`;
+                gE('#hvAATab-Summary>table').innerHTML = _html;
+
             } else if (name === 'Tools') { // 关于本脚本
                 gE('.hvAADebug', 'all', optionBox).forEach((input) => {
                     if(getValue('battle') && getValue('battle')[input.name]){
@@ -2301,12 +2502,18 @@ try {
 
         if (!g('option').encounter) {
             if (gE('.pauseEncounter')) {
-                gE('.pauseEncounter').innerHTML = '<l0>⚔️ 进行中</l0><l1>暫停</l1><l2>Pause</l2>';
+                button = gE('.pauseEncounter')
+                button.innerHTML = '<l0>⚔️ 进行中</l0><l1>暫停</l1><l2>Pause</l2>';
+                button.classList.remove('blue');
+                button.classList.add('green');
                 reverseEncounter()
             }
         } else {
             if (gE('.pauseEncounter')) {
-                gE('.pauseEncounter').innerHTML = '<l0>🛡️ 已暂停</l0><l1>繼續</l1><l2>Continue</l2>';
+                button = gE('.pauseEncounter')
+                button.innerHTML = '<l0>🛡️ 已暂停</l0><l1>繼續</l1><l2>Continue</l2>';
+                button.classList.remove('green');
+                button.classList.add('blue');
                 reverseEncounter()
             }
         }
@@ -2577,15 +2784,22 @@ try {
             cd = _1h / 2 + last - now;
         }
         cd = Math.max(0, cd);
-        const ui = gE('.encounterUI') ?? (() => {
-            const ui = gE('body').appendChild(cE('a'));
+        console.log("创建 encounterUI")
+        const ui = gE('#encounterUI') ?? (() => {
+            const ui = gE('#hvAADiv').appendChild(cE('a'));
             ui.className = 'encounterUI';
+            ui.id = 'encounterUI';
             ui.title = `${time(3, last)}\nEncounter Time: ${count}`;
             if (!isInBattle) {
                 ui.href = 'https://e-hentai.org/news.php?encounter';
             }
+            // ui.classList.add('my_button');
             return ui;
         })();
+        if(!ui.classList.contains("my_button")) {
+            ui.classList.add("my_button")
+            ui.classList.add("orange")
+        }
 
         const missed = count - encountered.length;
         if (count === 24) {
@@ -2595,6 +2809,7 @@ try {
         } else {
             ui.style.cssText += 'color:unset!important;';
         }
+        ui.style.cssText += 'margin-top: 10px;';
         ui.innerHTML = `${formatTime(cd).slice(0, 2).map(cdi => cdi.toString().padStart(2, '0')).join(`:`)}[${encounter.length ? (count >= 24 ? `☯` : count) : `✪`}${missed ? `-${missed}` : ``}]`;
         if (engage && !cd) {
             onEncounter();
@@ -3070,8 +3285,11 @@ try {
     function pauseChange() { // 暂停状态更改
         if (getValue('disabled')) {
             if (gE('.pauseChange')) {
+                button = gE('.pauseChange')
                 // gE('.pauseChange').innerHTML = '<l0>暂停</l0><l1>暫停</l1><l2>Pause</l2>';
-                gE('.pauseChange').innerHTML = '<l0>🟢 进行中</l0><l1>暫停</l1><l2>Pause</l2>';
+                button.innerHTML = '<l0>🟢 进行中</l0><l1>暫停</l1><l2>Pause</l2>';
+                button.classList.remove('blue');
+                button.classList.add('green');
             }
             document.title = getValue('disabled');
             delValue(0);
@@ -3080,8 +3298,11 @@ try {
             }
         } else {
             if (gE('.pauseChange')) {
+                button = gE('.pauseChange')
                 // gE('.pauseChange').innerHTML = '<l0>继续</l0><l1>繼續</l1><l2>Continue</l2>';
-                gE('.pauseChange').innerHTML = '<l0>⏸️已暂停</l0><l1>繼續</l1><l2>Continue</l2>';
+                button.innerHTML = '<l0>⏸️ 已暂停</l0><l1>繼續</l1><l2>Continue</l2>';
+                button.classList.remove('green');
+                button.classList.add('blue');
             }
             setValue('disabled', document.title);
             document.title = _alert(-1, 'hvAutoAttack暂停中', 'hvAutoAttack暫停中', 'hvAutoAttack Paused');
@@ -4493,7 +4714,7 @@ try {
     }
 
     // dealDrop
-    function dealDrop(DropsOld) {
+    function dealDrop(DropsOld, onlySum) {
         let DropsNew = []
         let newDrop
         let lastStatDay = -1
@@ -4507,7 +4728,7 @@ try {
                 if(newDrop) {
                     DropsNew.push(newDrop)
                 }
-                newDrop = {'__name': thisDay+ "：SUM"}
+                newDrop = {'__name': thisDay+ "：SUM", 'date': `${date.getFullYear()}-${date.getUTCMonth()+1}-${date.getUTCDate()}`}
             }
 
             // 处理数据
@@ -4525,7 +4746,9 @@ try {
                 newDrop[key] = value
             }
 
-            DropsNew.push(oldDrop)
+            if(!onlySum) {
+                DropsNew.push(oldDrop)
+            }
             lastStatDay = thisDay
         }
 
@@ -4537,7 +4760,7 @@ try {
     }
 
     // dealStats
-    function dealStats(statsOld) {
+    function dealStats(statsOld, onlySum) {
         let statsNew = []
         let newStat
         let lastStatDay = -1
@@ -4553,7 +4776,7 @@ try {
                 if(newStat) {
                     statsNew.push(newStat)
                 }
-                newStat = {'__name': thisDay+ "：SUM"}
+                newStat = {'__name': thisDay+ "：SUM", 'date': `${date.getFullYear()}-${date.getUTCMonth()+1}-${date.getUTCDate()}`}
             }
 
             // 处理数据
@@ -4577,7 +4800,9 @@ try {
                 newStat[cg] = newCg;
             }
 
-            statsNew.push(stat)
+            if(!onlySum) {
+                statsNew.push(stat)
+            }
             lastStatDay = thisDay
         }
 
