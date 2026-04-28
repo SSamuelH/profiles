@@ -60,7 +60,7 @@ const videoHeight = 500;
 
 // 正则匹配
 const hrefMatch = /(\w*)?\/user\/(.+)?\/post\/((\w|-)*)?$/;
-const userHrefMatch = /(\w*)?\/user\/(\w+)?(\?.+)?$/;
+const userHrefMatch = /(\w*)?\/user\/([\w|\.]+)?(\?.+)?$/;
 
 const LIKE_COLOR = "GoldenRod";
 const DISLIKE_COLOR = "Maroon";
@@ -934,7 +934,7 @@ const source_name_match = /(\w*)_source/;
                     (postData.previews.length == 2 && type == 'pic_withoutFirst')
                 ) {
                     // 如果只有一张图片
-                    let pic = postData.previews[0]
+                    let pic = postData.previews[postData.previews.length - 1]
                     let url = `${pic.server}/data${pic.path}`
 
                     let fileSuffix = getFileSuffix(pic.name);

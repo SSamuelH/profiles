@@ -1446,7 +1446,9 @@ try {
                 for(let drop of dropNew) {
                     let newDrops = {}
                     Object.keys(drop).forEach((i) => {
-                        if(i.startsWith("Health ") || i.startsWith("Mana ") || i.startsWith("Spirit ")) {
+                        if(i.startsWith("Health ") || i.startsWith("Mana ") || i.startsWith("Spirit ")
+                            || i == "Token of Blood" || i == "Soul Fragments"|| i == "#Credit"
+                        ) {
                             newDrops[i] = drop[i]
                         }
                     })
