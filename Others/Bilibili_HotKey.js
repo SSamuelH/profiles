@@ -55,4 +55,9 @@
             }
         }
     }, true);
+
+    // 删除画中画按钮
+    const targetBtn = document.querySelector("bpx-player-ctrl-pip");
+    targetBtn.remove();
+
 })();
