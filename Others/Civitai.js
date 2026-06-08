@@ -8,6 +8,7 @@
 // @author       Sam
 // @grant        GM_addStyle
 // @match        https://civitai.com/**
+// @match        https://civitai.red/**
 // @icon         https://civitai.com/favicon-blue.ico
 // @require      https://raw.githubusercontent.com/SSamuelH/profiles/refs/heads/main/deps/js/Tools/tools.js
 // @require      https://raw.githubusercontent.com/SSamuelH/profiles/refs/heads/main/deps/js/Tools/buttons.js
@@ -49,10 +50,10 @@
         }
         if (title_column) {
             let title = title_column.querySelector('.mantine-Title-root');
-            console.log(title);
+            console.log(title.innerText);
             copy()
         } else {
-            // console.log('not found');
+            console.log('not found');
             init()
         }
     }
@@ -78,17 +79,25 @@
 
             for (const Accordion of Accordions) {
                 let trs = Accordion.querySelectorAll('.mantine-Table-tr');
+                let groups = Accordion.querySelectorAll('.mantine-Group-root');
 
                 let type;
                 let air;
-                for (let tr of trs) {
+                for (let tr of groups) {
                     if(tr.childNodes[0].innerText == 'Type') {
                         type = tr.childNodes[1]
                     }
                     if(tr.childNodes[0].innerText == 'AIR') {
-                        air = tr.childNodes[1]
+                        console.log(tr)
+                        console.log(tr.childNodes[0].innerText)
+                        console.log(tr.childNodes[1].innerText)
+                        if(!air && tr.childNodes[1]) {
+                            air = tr.childNodes[1]
+                        }
                     }
                 }
+                console.log(type.innerText)
+                console.log(air.innerText)
 
                 if(type && air) {
                     let modelVersion = undefined;
@@ -122,6 +131,8 @@
 
                     let button = createButton(filename);
                     // insertButtonAfter(title.parentNode.lastChild, button)
+                    console.log(button)
+                    console.log("标题后插入按钮")
                     insertButtonAfter(title, button)
 
                     break
