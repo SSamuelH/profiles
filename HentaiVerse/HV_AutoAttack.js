@@ -6,7 +6,7 @@
 // @description  HV auto attack script, for the first user, should configure before use it.
 // @description:zh-CN HV自动打怪脚本，初次使用，请先设置好选项，请确认字体设置正常
 // @description:zh-TW HV自動打怪腳本，初次使用，請先設置好選項，請確認字體設置正常
-// @version      2.90.22.12
+// @version      2.90.2026-6-8
 // @author       dodying
 // @namespace    https://github.com/dodying/
 // @supportURL   https://github.com/dodying/UserJs/issues
@@ -330,6 +330,7 @@ try {
                     let battleCode = `${time(1)}: ${g('battle')?.roundType?.toUpperCase()}-${g('battle')?.roundAll}`
                     console.log("battleCode is ", battleCode)
                     setValue('battleCode', battleCode);
+                    setValue('roundType', g('battle')?.roundType?.toUpperCase());
                 } else {
                     console.log("g battle is undefined")
                 }
@@ -1332,6 +1333,7 @@ try {
                 } else {
                     if (getValue('drop')) {
                         drop.__name = getValue('battleCode');
+                        drop.__roundType = getValue('roundType');
                         dropOld.push(drop);
                     }
 
@@ -1393,6 +1395,7 @@ try {
                     // 如果有多条
                     if (getValue('stats')) {
                         stats.__name = getValue('battleCode');
+                        stats.__roundType = getValue('roundType');
                         statsOld.push(stats);
                     }
                     console.log(statsOld)
@@ -2292,6 +2295,10 @@ try {
         const returnValue = function (str) {
             if (str.match(/^_/)) {
                 const arr = str.split('_');
+                console.log("checkCondition")
+                console.log(arr)
+                console.log(arr[1])
+                console.log(...[...arr].splice(2))
                 return func[arr[1]](...[...arr].splice(2));
             } if (str.match(/^'.*?'$|^".*?"$/)) {
                 return str.substr(1, str.length - 2);
@@ -2318,7 +2325,9 @@ try {
                 if (!buff) {
                     return 0;
                 }
-                buff = buff.getAttribute('onmouseover').match(/\(.*,.*, (.*?)\)$/)[1] * 1;
+                // console.log("buffTurn")
+                // console.log(buff.getAttribute('onmouseover'))
+                buff = buff.getAttribute('onmouseover').match(/\(.*,.*,(\s)?(.*?)\)$/)[2] * 1;
                 return isNaN(buff) ? Infinity : buff;
             },
         };
@@ -2499,8 +2508,8 @@ try {
 
     // 暂停、开启 自动遭遇战
     function pauseEncounter() {
-        console.log(g('option').encounter) // 当前状态
-        console.log(gE('.hvAAApply'))
+        // console.log(g('option').encounter) // 当前状态
+        // console.log(gE('.hvAAApply'))
 
         if (!g('option').encounter) {
             if (gE('.pauseEncounter')) {
@@ -2531,7 +2540,7 @@ try {
 
     // 设置 自动遭遇战
     function setEncounter(encounter) {
-        console.log('setEncounter : ', encounter)
+        // console.log('setEncounter : ', encounter)
         return g('encounter', setValue('encounter', encounter));
     }
 
@@ -2701,7 +2710,7 @@ try {
             needs.push(`\n${name}(${count}<${threshold})`);
         }
         if (needs.length) {
-            console.log(`Needs supply:${needs}`);
+            // console.log(`Needs supply:${needs}`);
             document.title = `[C!]` + document.title;
         }
         logSwitchAsyncTask(arguments);
@@ -2728,7 +2737,7 @@ try {
             return gE('.messagebox_error', $doc(await $ajax.fetch(`?s=Forge&ss=re`, `select_item=${id}`)))?.innerText ? undefined : id;
         } catch (e) {console.error(e)}}))).filter(e => e);
         if (eqps.length) {
-            console.log('eqps need repair: ', eqps);
+            // console.log('eqps need repair: ', eqps);
             document.title = `[R!]` + document.title;
         }
         logSwitchAsyncTask(arguments);
@@ -2766,7 +2775,6 @@ try {
     }
 
     async function updateEncounter(engage, isInBattle) { try {
-        console.log("updateEncounter")
         if(getValue('disabled')){
             await pauseAsync(_1s);
             return await updateEncounter(engage, isInBattle);
@@ -2786,7 +2794,6 @@ try {
             cd = _1h / 2 + last - now;
         }
         cd = Math.max(0, cd);
-        console.log("创建 encounterUI")
         const ui = gE('#encounterUI') ?? (() => {
             const ui = gE('#hvAADiv').appendChild(cE('a'));
             ui.className = 'encounterUI';
@@ -4547,6 +4554,7 @@ try {
         if (g('option').recordEach && battle.roundNow === battle.roundAll) {
             const old = getValue('dropOld', true) || [];
             drop.__name = getValue('battleCode');
+            drop.__roundType = getValue('roundType');
             drop['#endTime'] = time(3);
             old.push(drop);
             setValue('dropOld', old);
@@ -4670,7 +4678,10 @@ try {
             } else if (text.match(/absorbs \d+ points of damage from the attack into \d+ points of \w+ damage/)) {
                 reg = text.match(/(.*) absorbs (\d+) points of damage from the attack into (\d+) points of (\w+) damage/);
                 point = reg[2] * 1;
-                magic = parm.log[i - 1].textContent.match(/you for (\d+) (\w+) damage/)[2].replace('ing', '');
+                // todo
+                // console.log("parm.log[i - 1].textContent")
+                // console.log(parm.log[i - 1].textContent)
+                magic = parm.log[i - 1].textContent.match(/you (for|take)  (\d+) (\w+) damage/)[3].replace('ing', '');
                 stats.hurt[magic] = (magic in stats.hurt) ? stats.hurt[magic] + point : point;
                 point = reg[3] * 1;
                 magic = `${reg[1].replace('Your ', '')}_${reg[4]}`;
@@ -4706,6 +4717,7 @@ try {
         if (g('option').recordEach && battle.roundNow === battle.roundAll) {
             const old = getValue('statsOld', true) || [];
             stats.__name = getValue('battleCode');
+            stats.__roundType = getValue('roundType');
             stats.self._endTime = time(3);
             old.push(stats);
             setValue('statsOld', old);
@@ -4737,7 +4749,7 @@ try {
             for (let key in oldDrop) {
                 let value = newDrop[key] ? newDrop[key] : 0
                 if(key === '__name') {
-                } else if (key === '#endTime') {
+                } else if (key === '#startTime' || key === '#endTime' || key === '__roundType') {
                     value = ''
                 } else if (key === '#startTime') {
                     value = ''
@@ -4771,6 +4783,11 @@ try {
             let date = new Date(self['_startTime'])
             let thisDay = date.getUTCDate()
 
+            if(stat['__roundType'] !== 'BA') {
+                let costTime = new Date(self['_endTime']).getTime() - new Date(self['_startTime']).getTime();
+                self['costTime'] = Math.floor(costTime/1000/60) + ':' + costTime/1000%60
+            }
+
             // 两天不同，写入数据
             if(lastStatDay !== thisDay) {
                 console.log("StatDay is : ", lastStatDay);
@@ -4790,7 +4807,7 @@ try {
                     let value = newCg[key] ? newCg[key] : 0
                     if(key === '__name') {
                         value = thisDay
-                    } else if(key === '_endTime') {
+                    } else if(key === '_startTime' || key === '_endTime' || key === '__roundType') {
                         value = ''
                     } else if (key === '_startTime') {
                         value = ''
@@ -4799,6 +4816,7 @@ try {
                     }
                     newCg[key] = value
                 }
+                newCg['costTime'] = ''
                 newStat[cg] = newCg;
             }
 
@@ -4821,7 +4839,7 @@ try {
         if(key === "_startTime" || key === "_endTime" || key === "#startTime" || key === "#endTime") {
             style = 'font-size:10px;'
         }
-        if(key === "_round") {
+        if(key === "_round" || key === "costTime") {
             style = 'font-weight:bold;color:#2F4F4F;'
         }
         if(key.startsWith("Health ")) {
