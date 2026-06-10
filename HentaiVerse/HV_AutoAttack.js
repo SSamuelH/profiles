@@ -56,7 +56,7 @@ try {
     hvAADiv.style.cssText = `z-index:999;position:fixed;margin:10px;` +
         `right:${btnLRPx}px;top:${btnTBPx}px;` +
         `text-align:center;`
-    console.log("创建hvAADiv")
+    // console.log("创建hvAADiv")
 
     const isFrame = window.self !== window.top;
     if (isFrame) {
@@ -324,8 +324,8 @@ try {
             newRound(false);
             onBattle();
             if (g('option').recordEach && !getValue('battleCode')) {
-                console.log('battleCode')
-                console.log(g('battle'))
+                // console.log('battleCode')
+                // console.log(g('battle'))
                 if(g('battle')) {
                     let battleCode = `${time(1)}: ${g('battle')?.roundType?.toUpperCase()}-${g('battle')?.roundAll}`
                     console.log("battleCode is ", battleCode)
@@ -495,7 +495,7 @@ try {
         }, false);
     }
     function setPauseEncounterButton(parent) {
-        console.log("g encounter :", g('option').encounter)
+        // console.log("g encounter :", g('option').encounter)
         // if (!g('option').encounter) {
         //     return;
         // }
@@ -1482,14 +1482,14 @@ try {
                     }
                 }
 
-                console.log(objs)
-                console.log(Object.values(objs))
+                // console.log(objs)
+                // console.log(Object.values(objs))
                 let list = Object.values(objs)
 
                 _html = '<tbody>';
 
                 list.reverse();
-                console.log(list)
+                // console.log(list)
                 _html = `${_html}<tr class="hvAATh"><td class="selectTable"></td>`;
                 list.forEach((_obj) => {
                     _html = `${_html}<td>${_obj.__name}</td>`;
@@ -2295,10 +2295,10 @@ try {
         const returnValue = function (str) {
             if (str.match(/^_/)) {
                 const arr = str.split('_');
-                console.log("checkCondition")
-                console.log(arr)
-                console.log(arr[1])
-                console.log(...[...arr].splice(2))
+                // console.log("checkCondition")
+                // console.log(arr)
+                // console.log(arr[1])
+                // console.log(...[...arr].splice(2))
                 return func[arr[1]](...[...arr].splice(2));
             } if (str.match(/^'.*?'$|^".*?"$/)) {
                 return str.substr(1, str.length - 2);
@@ -4681,7 +4681,7 @@ try {
                 // todo
                 // console.log("parm.log[i - 1].textContent")
                 // console.log(parm.log[i - 1].textContent)
-                magic = parm.log[i - 1].textContent.match(/you (for|take)  (\d+) (\w+) damage/)[3].replace('ing', '');
+                magic = parm.log[i - 1].textContent.match(/(You|you|and) (for|take) (\d+) (\w+) damage/)[4].replace('ing', '');
                 stats.hurt[magic] = (magic in stats.hurt) ? stats.hurt[magic] + point : point;
                 point = reg[3] * 1;
                 magic = `${reg[1].replace('Your ', '')}_${reg[4]}`;

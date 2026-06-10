@@ -48,7 +48,7 @@ var settings = {
 
     topMenuAlign: 'left', // '' (blank, default), 'left', 'center', 'right', or 'space-between', 'space-around', space-evenly'
     topMenuIntegrate: true, // integrate menus into one button
-    topMenuLinks: ['角色面板', '技能', '训练', '物品仓库', '物品商店','装备', '装备仓库', '装备商店', '交易市场', '竞技场', '塔楼', '浴血擂台', '压榨界', '道具界'],
+    topMenuLinks: ['角色面板', '技能', '训练', '物品仓库', '物品商店', '装备', '装备仓库', '交易市场', '竞技场', '浴血擂台', '压榨界', '道具界'],
     confirmStaminaRestorative: true, // confirm whether to use a stamina restorative item
     disableStaminaRestorative: 85, // disable a stamina restorative button when your stamina is higher than this
     warnLowStamina: 2, // warn when your stamina is lower than this
@@ -2411,15 +2411,16 @@ GM_addStyle(/*css*/`
 
 _top.menu = {
     '角色面板': { s: 'Character', ss: 'ch' , text: '主页'},
-    '装备': { s: 'Character', ss: 'eq' , text: '装备'},
+    '装备': { s: 'Character', ss: 'eq' , text: '已穿戴'},
     '技能': { s: 'Character', ss: 'ab' , text: '技能'},
     '训练': { s: 'Character', ss: 'tr', isekai: false ,text: '训练'},
     '物品仓库': { s: 'Character', ss: 'it' ,text: '物品'},
-    '装备仓库': { s: 'Character', ss: 'in' ,text: '装备库' },
     '设置': { s: 'Character', ss: 'se' ,text: '设置' },
     '前往异世界': { s: 'Character', href: '/isekai/', isekai: false, text: '异世界' },
     '前往永久区': { s: 'Character', href: '/', isekai: true, text: '永久区' },
-    '装备商店': { s: 'Bazaar', ss: 'es' ,text: '装备店'},
+
+    '装备仓库': { s: 'Bazaar', ss: 'am' ,text: '装备' },
+    // '装备商店': { s: 'Bazaar', ss: 'es' ,text: '装备店'},
     '物品商店': { s: 'Bazaar', ss: 'is' ,text: '物品店'},
     '雪花祭坛': { s: 'Bazaar', ss: 'ss' ,text: '祭坛'},
     '交易市场': { s: 'Bazaar', ss: 'mk' ,text: '市场'},
@@ -2427,11 +2428,13 @@ _top.menu = {
     '莫古利邮局': { s: 'Bazaar', ss: 'mm' ,text: '邮箱'},
     '武器彩票': { s: 'Bazaar', ss: 'lt', isekai: false },
     '防具彩票': { s: 'Bazaar', ss: 'la', isekai: false },
+
     '竞技场': { s: 'Battle', ss: 'ar' ,text: '竞技场'},
     '塔楼': { s: 'Battle', ss: 'tw', isekai: true ,text: '塔楼'},
     '浴血擂台': { s: 'Battle', ss: 'rb' ,text: '擂台'},
     '压榨界': { s: 'Battle', ss: 'gr' ,text: '压榨界'},
     '道具界': { s: 'Battle', ss: 'iw' ,text: '道具界'},
+
     '装备修理': { s: 'Forge', ss: 're' ,text: '修理' },
     '装备强化': { s: 'Forge', ss: 'up' ,text: '强化' },
     '装备附魔': { s: 'Forge', ss: 'en' ,text: '附魔' },
@@ -2935,7 +2938,7 @@ if (settings.showCredits) {
 if (settings.showEquipSlots === 2 || settings.showEquipSlots === 1 && _query.s === 'Battle') {
     _bottom.show_equip = async function () {
         _bottom.node.equip = $element('div', _bottom.node.div, '加载中...');
-        const html = await $ajax.fetch('?s=Character&ss=in');
+        const html = await $ajax.fetch('?s=Character&ss=am');
         const exec = />Equip Slots: (\d+)(?: \+ (\d+))? \/ (\d+)</.exec(html);
         const inventory = parseInt(exec[1]);
         const storage = parseInt(exec[2] || 0);
@@ -4827,7 +4830,7 @@ if (settings.equipInventory && _query.s === 'Character' && _query.ss === 'in') {
         _in.init_list(filter);
         _in.category[filter].div.classList.add('hvut-eq-loading');
 
-        const html = await $ajax.fetch('?s=Character&ss=in&filter=' + filter);
+        const html = await $ajax.fetch('?s=Character&ss=am&filter=' + filter);
         const doc = $doc(html);
         Object.assign($equip.dynjs_eqstore, JSON.parse(/var dynjs_eqstore = (\{.*\});/.test(html) && RegExp.$1));
         _in.get_list(filter, $id('eqinv_outer', doc));
@@ -5248,7 +5251,7 @@ if (settings.equipInventory && _query.s === 'Character' && _query.ss === 'in') {
 
     if (settings.equipInventoryIntegration) {
         const filterbar = $id('filterbar');
-        $element('a', [filterbar, 'afterbegin'], { href: '?s=Character&ss=in', innerHTML: '<div>All</div>' });
+        $element('a', [filterbar, 'afterbegin'], { href: '?s=Character&ss=am', innerHTML: '<div>All</div>' });
         if (_query.filter) {
             filterbar.children[0].children[0].classList.add('cfb');
         } else {
@@ -5484,7 +5487,7 @@ if (settings.equipmentShop && _query.s === 'Bazaar' && _query.ss === 'es') {
         eq.node.wrapper.classList.add('hvut-es-disabled');
 
         // 'inv_equip': to storage, 'inv_eqstor': to inventory
-        await $ajax.fetch('?s=Character&ss=in', `equiplist=${eq.info.eid}&equipgroup=${equipgroup}`);
+        await $ajax.fetch('?s=Character&ss=am', `equiplist=${eq.info.eid}&equipgroup=${equipgroup}`);
         eq.node.wrapper.remove();
     };
 
@@ -6258,7 +6261,7 @@ if (settings.shrine && _query.s === 'Bazaar' && _query.ss === 'ss') {
     _ss.node.results_equip = $input(['button', '装备库存量'], _ss.node.results_buttons, { style: 'width: 380px;' });
     $input(['button', '关闭'], _ss.node.results_buttons, null, () => { _ss.toggle_results(); });
 
-    $ajax.fetch('?s=Character&ss=in').then((html) => {
+    $ajax.fetch('?s=Character&ss=am').then((html) => {
         const exec = />Equip Slots: (\d+)(?: \+ (\d+))? \/ (\d+)</.exec(html);
         _ss.equip.current = parseInt(exec[1]) + parseInt(exec[2] || 0);
         _ss.equip.capacity = parseInt(exec[3]);
@@ -9784,7 +9787,7 @@ if (settings.moogleMail && _query.s === 'Bazaar' && _query.ss === 'mm') {
             await _mm.mail_load(mid, `action=attach_remove&mmtoken=${_mm.mmtoken}`);
 
             _mm.mail_log('重铸');
-            const html = await $ajax.fetch('?s=Character&ss=in');
+            const html = await $ajax.fetch('?s=Character&ss=am');
             const uid = /var uid = (\d+);/.test(html) && RegExp.$1;
             const token = /var simple_token = "(\w+)";/.test(html) && RegExp.$1;
             _mm.mail_log('...');
