@@ -38,6 +38,16 @@ const isIsekai = href.indexOf('isekai') !== -1;
 const current = isIsekai ? 'isekai' : 'persistent';
 const other = isIsekai ? 'persistent' : 'isekai';
 let GM_cache;
+let lockRetryTimer = null;
+
+// 跨标签页锁
+const BATTLE_LOCK_KEY = 'hvAA_battle_lock';
+const LOCK_TIMEOUT_MS = 5 * 1000;   // 锁超时时间（毫秒）
+const HEARTBEAT_INTERVAL_MS = 2 * 1000;
+
+let myTabId = null;          // 当前标签页唯一标识
+let heartbeatTimer = null;   // 心跳定时器
+let isLockOwner = false;     // 当前页是否持有锁
 
 const _1s = 1000;
 const _1m = 60 * _1s;
@@ -1450,7 +1460,7 @@ try {
                     let newDrops = {}
                     Object.keys(drop).forEach((i) => {
                         if(i.startsWith("Health ") || i.startsWith("Mana ") || i.startsWith("Spirit ")
-                            || i == "Token of Blood" || i == "Soul Fragments"|| i == "#Credit"
+                            || i == "Token of Blood" || i == "Soul Fragments"|| i == "#Credit" || i == "World Seed"
                         ) {
                             newDrops[i] = drop[i]
                         }
@@ -2711,7 +2721,8 @@ try {
         }
         if (needs.length) {
             // console.log(`Needs supply:${needs}`);
-            document.title = `[C!]` + document.title;
+            // document.title = `[C!]` + document.title;
+            prependTitle('[C!]')
         }
         logSwitchAsyncTask(arguments);
         return !needs.length;
@@ -2738,7 +2749,8 @@ try {
         } catch (e) {console.error(e)}}))).filter(e => e);
         if (eqps.length) {
             // console.log('eqps need repair: ', eqps);
-            document.title = `[R!]` + document.title;
+            // document.title = `[R!]` + document.title;
+            prependTitle('[R!]')
         }
         logSwitchAsyncTask(arguments);
         return !eqps.length;
@@ -2911,9 +2923,11 @@ try {
         }
         if(staminaChecked === 0){ // failed until today ends
             setTimeout(method, Math.floor(time(0) / _1h + 1) * _1h - time(0));
-            document.title = `[S!!]` + document.title;
+            // document.title = `[S!!]` + document.title;
+            prependTitle('[S!!]')
         } else { // case -1: // failed with nature recover
-            document.title = `[S!]` + document.title;
+            // document.title = `[S!]` + document.title;
+            prependTitle('[S!]')
         }
     }
 
@@ -2995,7 +3009,10 @@ try {
             logSwitchAsyncTask(arguments);
             return;
         }
-        document.title = _alert(-1, '闲置竞技场开始', '閒置競技場開始', 'Idle Arena start');
+        // document.title = _alert(-1, '闲置竞技场开始', '閒置競技場開始', 'Idle Arena start');
+
+        let idleTitle = _alert(-1, '闲置竞技场开始', '閒置競技場開始', 'Idle Arena start');
+        updateTitleWithLock(idleTitle);
         if(key !== 'gr'){
             arena.arrayDone.push(key);
         }
@@ -3004,8 +3021,38 @@ try {
         logSwitchAsyncTask(arguments);
     } catch (e) {console.error(e)}}
 
+    function onBattle() {
+        if (gE('#navbar')) return; // 不在战斗中
+        if (!myTabId) myTabId = getOrCreateTabId();
+
+        // 如果当前已经持有锁，正常执行
+        if (isLockOwner) {
+            _Battle()
+            return;
+        }
+
+        // 尝试获取锁
+        if (tryAcquireLock()) {
+            isLockOwner = true;
+            startHeartbeat();
+            updateTitleWithLock();
+            // 继续原有战斗逻辑
+            _Battle()
+        } else {
+            // 抢锁失败，设置等待锁状态
+            if (lockRetryTimer) clearTimeout(lockRetryTimer);
+            lockRetryTimer = setTimeout(() => {
+                lockRetryTimer = null;
+                onBattle(); // 重新尝试
+            }, 2000);
+            // 确保标题显示等待状态，而不是暂停
+            updateTitleWithLock();
+            return; // 不执行战斗动作
+        }
+    }
+
     // 战斗中//
-    function onBattle() { // 主程序
+    function _Battle() { // 主程序
         let battle = getValue('battle', true);
         if (!battle || !battle.roundAll) { // 修复因多个页面/世界同时读写造成缓存数据异常的情况
             battle = JSON.parse(JSON.stringify(g('battle')));
@@ -3171,7 +3218,10 @@ try {
             pauseChange();
             Debug.shiftLog();
         }
-        document.title = `${getBattleTypeDisplay(true)}:R${battle.roundNow}/${battle.roundAll}:T${currentTurn}@${g('runSpeed')}tps,${g('monsterAlive')}/${g('monsterAll')}`;
+        // document.title = `${getBattleTypeDisplay(true)}:R${battle.roundNow}/${battle.roundAll}:T${currentTurn}@${g('runSpeed')}tps,${g('monsterAlive')}/${g('monsterAll')}`;
+        let newTitle = `${getBattleTypeDisplay(true)}:R${battle.roundNow}/${battle.roundAll}:T${currentTurn}@${g('runSpeed')}tps,${g('monsterAlive')}/${g('monsterAll')}`;
+        updateTitleWithLock(newTitle);
+
         setValue('battle', battle);
         if (!battle.monsterStatus || battle.monsterStatus.length !== g('monsterAll')) {
             fixMonsterStatus();
@@ -3313,8 +3363,11 @@ try {
                 button.classList.remove('green');
                 button.classList.add('blue');
             }
+            releaseLock();  // 主动释放锁
             setValue('disabled', document.title);
-            document.title = _alert(-1, 'hvAutoAttack暂停中', 'hvAutoAttack暫停中', 'hvAutoAttack Paused');
+            // document.title = _alert(-1, 'hvAutoAttack暂停中', 'hvAutoAttack暫停中', 'hvAutoAttack Paused');
+            let pausedTitle = _alert(-1, 'hvAutoAttack暂停中', 'hvAutoAttack暫停中', 'hvAutoAttack Paused');
+            updateTitleWithLock(pausedTitle);
         }
     }
 
@@ -3322,6 +3375,7 @@ try {
         setAlarm(alarm);
         if(alarm === 'SkipDefeated') return;
         delValue(1);
+        releaseLock();  // 释放锁
         if(g('option').ExitBattleWaitTime) {
             setTimeout(() => {
                 $ajax.open(getValue('lastHref'));
@@ -3376,6 +3430,24 @@ try {
             const bossDead = gE('div.btm1[style*="opacity"] div.btm2[style*="background"]', 'all').length;
             g('bossAlive', g('bossAll') - bossDead);
             const battleLog = gE('#textlog>tbody>tr>td', 'all');
+
+            // ========== 新增：记录战斗结果 ==========
+            let battleResult = 'Victory';
+            const isVictory = (g('monsterAlive') === 0);
+            if (!isVictory) {
+                // 检查是否为逃跑
+                const fleeDetected = Array.from(battleLog).some(log => log.textContent.includes('You attempt to flee'));
+                if (fleeDetected) {
+                    battleResult = 'Flee';
+                } else if (g('option').autoSkipDefeated && g('monsterAlive') > 0) {
+                    battleResult = 'SkipDefeated';
+                } else {
+                    battleResult = 'Defeat';
+                }
+            }
+            g('battleResult', battleResult);
+            // =====================================
+
             if (g('option').recordUsage) {
                 obj.log = battleLog;
                 recordUsage(obj);
@@ -4718,6 +4790,7 @@ try {
             const old = getValue('statsOld', true) || [];
             stats.__name = getValue('battleCode');
             stats.__roundType = getValue('roundType');
+            stats.__result = g('battleResult');   // 添加结果字段
             stats.self._endTime = time(3);
             old.push(stats);
             setValue('statsOld', old);
@@ -4780,6 +4853,7 @@ try {
         let lastStatDay = -1
         for (const stat of statsOld) {
             let self = stat['self'];
+            self['result'] = stat['__result']?stat['__result']:''
             let date = new Date(self['_startTime'])
             let thisDay = date.getUTCDate()
 
@@ -4807,7 +4881,7 @@ try {
                     let value = newCg[key] ? newCg[key] : 0
                     if(key === '__name') {
                         value = thisDay
-                    } else if(key === '_startTime' || key === '_endTime' || key === '__roundType') {
+                    } else if(key === '_startTime' || key === '_endTime' || key === '__roundType' || key === 'result') {
                         value = ''
                     } else if (key === '_startTime') {
                         value = ''
@@ -4853,6 +4927,113 @@ try {
         }
         return style;
     }
+
+    function getOrCreateTabId() {
+        if (!window.name || !window.name.startsWith('hvAA_tab_')) {
+            window.name = 'hvAA_tab_' + Date.now() + '_' + Math.random();
+        }
+        return window.name;
+    }
+
+    // 尝试获取锁（原子性模拟）
+    function tryAcquireLock() {
+        const now = Date.now();
+        const lockStr = localStorage.getItem(BATTLE_LOCK_KEY);
+        let lock = lockStr ? JSON.parse(lockStr) : null;
+
+        // 如果锁属于当前标签页，直接续期并返回 true
+        if (lock && lock.owner === myTabId) {
+            lock.timestamp = now;
+            localStorage.setItem(BATTLE_LOCK_KEY, JSON.stringify(lock));
+            return true;
+        }
+
+        if (!lock || (now - lock.timestamp) > LOCK_TIMEOUT_MS) {
+            // 锁空闲或已超时，抢占
+            const newLock = {
+                owner: myTabId,
+                timestamp: now
+            };
+            localStorage.setItem(BATTLE_LOCK_KEY, JSON.stringify(newLock));
+            return true;
+        }
+        // 锁被其他页面占用且未超时
+        return false;
+    }
+
+// 释放锁（只有自己持有的锁才释放）
+    function releaseLock() {
+        if (!isLockOwner) return;
+        const lockStr = localStorage.getItem(BATTLE_LOCK_KEY);
+        if (lockStr) {
+            const lock = JSON.parse(lockStr);
+            if (lock.owner === myTabId) {
+                localStorage.removeItem(BATTLE_LOCK_KEY);
+            }
+        }
+        isLockOwner = false;
+        if (heartbeatTimer) {
+            clearInterval(heartbeatTimer);
+            heartbeatTimer = null;
+        }
+    }
+
+// 启动心跳（仅在获取锁成功后调用）
+    function startHeartbeat() {
+        if (heartbeatTimer) clearInterval(heartbeatTimer);
+        heartbeatTimer = setInterval(() => {
+            if (isLockOwner) {
+                const lockStr = localStorage.getItem(BATTLE_LOCK_KEY);
+                if (lockStr) {
+                    const lock = JSON.parse(lockStr);
+                    if (lock.owner === myTabId) {
+                        lock.timestamp = Date.now();
+                        localStorage.setItem(BATTLE_LOCK_KEY, JSON.stringify(lock));
+                    } else {
+                        // 锁被其他页面抢走了，放弃控制权
+                        isLockOwner = false;
+                        clearInterval(heartbeatTimer);
+                        heartbeatTimer = null;
+                        pauseChange(); // 暂停当前脚本
+                    }
+                } else {
+                    // 锁异常丢失，重新尝试获取
+                    isLockOwner = false;
+                    clearInterval(heartbeatTimer);
+                    heartbeatTimer = null;
+                    // 下次战斗开始时会重新竞争
+                }
+            }
+        }, HEARTBEAT_INTERVAL_MS);
+    }
+
+    // 页面关闭或刷新时释放锁
+    window.addEventListener('beforeunload', () => {
+        releaseLock();
+    });
+
+    // 锁状态显示
+    function updateTitleWithLock(titleBase) {
+        let originalTitle = titleBase || document.title.replace(/^\[[🔒⏳⛔]\]\s*/, '');
+        let prefix = '';
+        if (isLockOwner) {
+            prefix = '[🔒] ';
+        } else if (getValue('disabled')) {
+            prefix = '[⛔] ';
+        } else {
+            prefix = '[⏳] ';
+        }
+        document.title = prefix + originalTitle;
+    }
+
+    function prependTitle(prefix) {
+        let current = document.title;
+        // 移除已有的锁前缀和资源前缀（可选）
+        let raw = current.replace(/^\[[🔒⏳⛔]\]\s*/, '').replace(/^\[[CRS!]+\]\s*/, '');
+        let newRaw = prefix + raw;
+        updateTitleWithLock(newRaw);
+    }
+    // END 在这上面增加新代码
 } catch (e) {
     console.log(e);
     document.title = e;
