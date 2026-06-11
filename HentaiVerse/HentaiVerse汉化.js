@@ -38,10 +38,12 @@
         '#train_outer' : ['trains'], //训练
         '#popup_box' : [true, 'itemInfos', 'items', 'artifact', 'equipsName', 'equipsInfo'], //物品和装备悬浮窗，需要监听动态翻译
         '#filterbar' : ['filters'], //装备、物品列表的类型筛选栏
+        '#filterbar .cfb, #filterbar .cfbs' : ['filters'], // “全部”等分类标签
         '#armory_left' : ['filters'], //装备页的左侧筛选栏
         '#item_outer' : ['items', 'artifact'], //物品仓库
         '#eqinv_outer' : ['equipsName'], //装备仓库
-        '#equiplist' : ['armory', 'equipsName'], //装备仓库
+        '#equiplist' : [true, 'armory', 'equipsName'], //装备仓库
+        '#equiplist td' : [true, 'equipsInfo'], // 装备的等级、耐久等额外信息
         '#equipinfo' : [true, 'armory', 'equipsName','equipsInfo'], //装备仓库右侧信息，需要监听动态翻译
         '#eqstats' : [true, 'equipsInfo'], //强化装备信息，需要监听动态翻译
         '#equipcount' : [true, 'armory'],//装备仓库已选择标签，需要动态翻译
@@ -97,6 +99,16 @@
         //'#table_skills' : [true, 'skills'], //战斗技能面板
         //'#table_magic' : [true, 'skills'], //战斗法术面板
         //'#pane_item' : [true, 'battling'], //战斗物品面板
+
+        // 战斗页面的翻译元素（原有条目后面增加）
+        '#hvut-bt-div' : [true, 'equipsName', 'items', 'armory', 'battling'],  // 整个 HVUT 面板容器
+        '.hvut-bt-equip a' : ['equipsName'],       // 装备名称链接
+        '.hvut-bt-items li' : ['items'],           // 物品列表项
+        '.hvut-bt-repair li' : ['armory'],         // 修理材料列表
+        '.hvut-bt-repairall' : ['armory'],         // “修理全部”按钮及相关提示
+
+        '.hvut-equip-Magnificent label' : ['equipsName'],       // 装备名称链接
+        '.hvut-equip-Magnificent .lc' : ['equipsName'],       // 装备名称链接
     };
 
 
@@ -3894,10 +3906,34 @@
                 translateElemTitle(elem, dict, isDynamic); //翻译鼠标悬停文本
                 if (isDynamic) {
                     dynamicDict.set(elem, dict); //存储字典以备动态翻译使用
-                    observer.observe(elem, {childList:true, attribute: true, attributeFilter: ['value', 'title']}); //监听翻译动态内容
+                    // observer.observe(elem, {childList:true, attribute: true, attributeFilter: ['value', 'title']}); //监听翻译动态内容
+                    observer.observe(elem, {
+                        childList: true,
+                        subtree: true,
+                        characterData: true,
+                        attribute: true,
+                        attributeFilter: ['value', 'title']
+                    });
                 }
             }
             initRestoreButton();
+        }
+
+        // 针对装备管理页面的额外监听（确保 HVUT 合并表格后被翻译）
+        if (document.querySelector('#equiplist')) {
+            const armoryObserver = new MutationObserver(() => {
+                const list = document.querySelector('#equiplist');
+                if (list && !list.hasAttribute('data-hvut-armory-translated')) {
+                    // 多次触发，但每次都会重新翻译
+                    translateText(list, dynamicDict.get(list) || buildDict('armory').concat(buildDict('equipsName')), true);
+                    translateButtons(list, buildDict('armory'), true);
+                }
+            });
+            armoryObserver.observe(document.querySelector('#equiplist'), {
+                childList: true,
+                subtree: true,
+                characterData: true
+            });
         }
         console.timeEnd('hvtranslate');
     }
