@@ -4,7 +4,7 @@
 // @description    A comprehensive out-of-battle script for Hentaiverse
 // @homepageURL    https://forums.e-hentai.org/index.php?showtopic=211883
 // @supportURL     https://forums.e-hentai.org/index.php?showtopic=211883
-// @version        4.2.1
+// @version        4.2.1.01
 // @date           2026-06-08
 // @author         sssss2 & Translate By SSamuel
 // @match          *://*.hentaiverse.org/*
@@ -28,6 +28,8 @@
 const settings = {
 
     translateToCN: true,
+    noIsekai: true,
+
     // [GENERAL]
     reNotification: true,
     reBattle: true,
@@ -233,6 +235,7 @@ const settings = {
         "Equip Code": "装备代码",
         "Edit Format": "编辑格式",
         "Protect Filters": "保存过滤器",
+        "Bazaar Filters": "商店过滤器",
         "ATTACH from TEXT": "从文本添加",
         "Available Formats": "可用格式规范",
         "CALC": "清除文本",
@@ -261,6 +264,13 @@ const settings = {
 
         // 物品
         'Health Potion' : '体力药水', 'Health Draught' : '体力长效药', 'Health Elixir' : '终极体力药', 'Mana Potion' : '法力药水', 'Mana Draught' : '法力长效药', 'Mana Elixir' : '终极法力药', 'Spirit Potion' : '灵力药水', 'Spirit Draught' : '灵力长效药', 'Spirit Elixir' : '终极灵力药', 'Last Elixir' : '终极秘药', 'Energy Drink' : '能量饮料', 'Caffeinated Candy' : '咖啡因糖果',
+
+        'Strength':'力量',
+        'Dexterity':'灵巧',
+        'Agility':'敏捷',
+        'Endurance':'体质',
+        'Intelligence':'智力',
+        'Wisdom':'感知',
     }
 
 };
@@ -3168,22 +3178,30 @@ _top.init = function () {
         $element('span', a, m.title);
     });
 
+    _top.node.separator = $element('div', _top.node.div, ['!width: 10px;color:gray;', `/<span>¦</span>`]);
+
     // _top.node.stamina = $element('div', _top.node.div, ['!width: 90px;', `/<span>Stamina: ${_player.stamina}</span>`]);
     _top.node.stamina = $element('div', _top.node.div, ['!width: 90px;', `/<span>精力: ${_player.stamina}</span>`]);
     _top.node.level = $element('div', _top.node.div, ['!width: 60px;', `/<span>Lv.${_player.level}</span>`]);
+
+    _top.node.separator = $element('div', _top.node.div, ['!width: 10px;color:gray;', `/<span>¦</span>`]);
+
     _top.node.difficulty = $element('div', _top.node.div, ['!width: 80px;', `/<span>${_player.difficulty}</span>`]);
     _top.node.persona = $element('div', _top.node.div, ['!width: 110px;', '/<span>Persona</span>']);
     if ($config.settings.reNotification) {
         $re.hv();
     }
 
-    const _isekai = _server.name.toUpperCase() !== 'PERSISTENT'
-    // let serverName = _isekai ? "异世界" : "永久区"
-    $element('div', _top.node.div, ['.hvut-top-placeholder']);
-    _top.node.server =
+    // 异世界切换
+    if(!settings.noIsekai) {
+        const _isekai = _server.name.toUpperCase() !== 'PERSISTENT'
+        // let serverName = _isekai ? "异世界" : "永久区"
+        $element('div', _top.node.div, ['.hvut-top-placeholder']);
+        _top.node.server =
             CNFlag ?
                 $element('div', _top.node.div, ['!width: 50px;', `/<span>${_isekai ? "异世界" : "永久区"}</span>`]) :
                 $element('div', _top.node.div, ['!width: 80px;', `/<span>${_server.name.toUpperCase()}</span>`]);
+    }
 
     _top.node.config = $element('div', _top.node.div, ['!width: 30px;']);
     $element('span', _top.node.config, ['#hvut-top-config-icon', '/<svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="30" height="22" viewBox="0 0 50 50" fill="#5C0D11"><path d="M47.16,21.221l-5.91-0.966c-0.346-1.186-0.819-2.326-1.411-3.405l3.45-4.917c0.279-0.397,0.231-0.938-0.112-1.282 l-3.889-3.887c-0.347-0.346-0.893-0.391-1.291-0.104l-4.843,3.481c-1.089-0.602-2.239-1.08-3.432-1.427l-1.031-5.886 C28.607,2.35,28.192,2,27.706,2h-5.5c-0.49,0-0.908,0.355-0.987,0.839l-0.956,5.854c-1.2,0.345-2.352,0.818-3.437,1.412l-4.83-3.45 c-0.399-0.285-0.942-0.239-1.289,0.106L6.82,10.648c-0.343,0.343-0.391,0.883-0.112,1.28l3.399,4.863 c-0.605,1.095-1.087,2.254-1.438,3.46l-5.831,0.971c-0.482,0.08-0.836,0.498-0.836,0.986v5.5c0,0.485,0.348,0.9,0.825,0.985 l5.831,1.034c0.349,1.203,0.831,2.362,1.438,3.46l-3.441,4.813c-0.284,0.397-0.239,0.942,0.106,1.289l3.888,3.891 c0.343,0.343,0.884,0.391,1.281,0.112l4.87-3.411c1.093,0.601,2.248,1.078,3.445,1.424l0.976,5.861C21.3,47.647,21.717,48,22.206,48 h5.5c0.485,0,0.9-0.348,0.984-0.825l1.045-5.89c1.199-0.353,2.348-0.833,3.43-1.435l4.905,3.441 c0.398,0.281,0.938,0.232,1.282-0.111l3.888-3.891c0.346-0.347,0.391-0.894,0.104-1.292l-3.498-4.857 c0.593-1.08,1.064-2.222,1.407-3.408l5.918-1.039c0.479-0.084,0.827-0.5,0.827-0.985v-5.5C47.999,21.718,47.644,21.3,47.16,21.221z M25,32c-3.866,0-7-3.134-7-7c0-3.866,3.134-7,7-7s7,3.134,7,7C32,28.866,28.866,32,25,32z"></path></svg>'], () => { $config.open(); });
@@ -3354,11 +3372,11 @@ GM_addStyle(/*css*/`
   .hvut-top-menu-s { padding: 0 5px; background-color: var(--color-bg-invert); color: var(--color-font-invert); }
 
   .hvut-top-links { display: flex; }
-  .hvut-top-links > a { position: relative; margin: 0 1px; padding: 0 1px; min-width: 28px; font-size: 11pt; border-radius: 2px; }
+  .hvut-top-links > a { position: relative; margin: 0 1px; padding: 0 1px; min-width: 36px; font-size: 11pt; border-radius: 2px; }
   .hvut-top-links > a:hover { background-color: var(--color-bg-light); }
   .hvut-top-links > a > span { display: none; position: absolute; top: 100%; left: 0; margin-top: 2px; margin-left: 0; padding: 1px 4px; background-color: var(--color-bg-light); color: var(--color-font-light); border: 1px solid var(--color-border-light); font-size: 10pt; line-height: 20px; font-weight: normal; pointer-events: none; }
   .hvut-top-links > a:hover > span { display: block; }
-  .hvut-top-links-cn > a { position: relative; margin: 0 2px; padding: 0 1px; min-width: 36px; font-size: 11pt; border-radius: 2px; }
+  .hvut-top-links-cn > a { background-color: lightgrey; position: relative; margin: 0 2px; padding: 0 1px; min-width: 48px; font-size: 10.5pt; border-radius: 2px; }
   
   .hvut-top-ygm { color: transparent !important; background: url('/y/mmail/ygm.png') no-repeat center center; animation: ygm 0.5s ease-in-out 10 alternate; filter: brightness(200%); }
   .hvut-top-ygm:hover { color: var(--color-font-highlight) !important; background-image: none; animation: none; filter: none; }
@@ -4040,7 +4058,8 @@ if (_query.s === 'Character' && _query.ss === 'eq') {
         const doc = $doc(html);
         const base = {};
         $qsa('#attr_table tr:nth-last-child(n+2)', doc).forEach((tr) => {
-            base[tr.children[0].textContent] = tr.children[1].textContent;
+            let name = CNFlag ? inputTranslator(tr.children[0].textContent) : tr.children[0].textContent;
+            base[name] = tr.children[1].textContent;
         });
         $qsa('#stats_scrollable > table:nth-last-of-type(2) tr').forEach((tr) => {
             const name = tr.cells[1].textContent;
