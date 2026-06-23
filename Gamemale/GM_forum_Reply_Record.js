@@ -41,7 +41,7 @@ const buttonGroup = {
     "看看系统奖励": {"name": "SystemAward", "func": "SystemAward", "color": "blue"},
     "跳到附件位置": {"name": "LocateAttach", "func": "LocateAttach", "color": "light-purple", pageType: "thread"},
     "跳到评分位置": {"name": "LocateRate", "func": "LocateRate", "color": "light-purple", pageType: "thread"},
-    "跳到回复位置": {"name": "LocateReply", "func": "LocateReply", "color": "purple", pageType: "thread"},
+    "跳到回复位置": {"name": "LocateReply", "func": "LocateReply", "color": "light-purple", pageType: "thread"},
     // "测试": {"name": "test", "func": "test", "color": "gray"},
     // "测试2": {"name": "test2", "func": "test2", "color": "gray"},
     // "清除": {"name": "clean", "func": "clean", "color": "gray"},
