@@ -72,6 +72,10 @@
     color: white;
     background: linear-gradient(to right, #6B8DD6,#667eea,#8E37D7,#764ba2);
 }
+.my_button.light-purple {
+    color: white;
+    background: linear-gradient(to right, #DDA0DD,#D94DFF,#BA55D3,#9370DB);
+}
 .my_button.translucence {
     color: #888888;
     background: linear-gradient(to right, rgba(0, 0, 0, 0.2), rgba(70, 70, 70, 0.2), rgba(135, 135, 135, 0.2));

@@ -25,14 +25,23 @@
 const btnSwitchName = "btnSwitch"
 const btnSizeName = "btnSize"
 
+// 页面类型
+const pageTypeMatch = {
+    // 帖子
+    "thread": [
+        /(\w*)?\/thread-(\d*)-(\d*)-(\d*).html(.+)?$/,
+        /(\w*)?\/forum.php\?mod=viewthread\&tid=(\d*)(.+)?$/]
+}
+
 const buttonGroup = {
     "查看今日奖励": {"name": "ReplyAward", "func": "ReplyAward"},
     "今天还未回复过": {"name": "NotReplied", "func": "NotReplied", "color": "gray"},
     "查看往期奖励": {"name": "ReplyAward_history", "func": "ReplyAward_history", color: "orange"},
     "查看回复板块": {"name": "ReplyPlate", "func": "ReplyPlate"},
     "看看系统奖励": {"name": "SystemAward", "func": "SystemAward", "color": "blue"},
-    "跳到附件位置": {"name": "LocateAttach", "func": "LocateAttach", "color": "blue"},
-    "跳到评分位置": {"name": "LocateRate", "func": "LocateRate", "color": "blue"},
+    "跳到附件位置": {"name": "LocateAttach", "func": "LocateAttach", "color": "light-purple", pageType: "thread"},
+    "跳到评分位置": {"name": "LocateRate", "func": "LocateRate", "color": "light-purple", pageType: "thread"},
+    "跳到回复位置": {"name": "LocateReply", "func": "LocateReply", "color": "purple", pageType: "thread"},
     // "测试": {"name": "test", "func": "test", "color": "gray"},
     // "测试2": {"name": "test2", "func": "test2", "color": "gray"},
     // "清除": {"name": "clean", "func": "clean", "color": "gray"},
@@ -162,6 +171,9 @@ const ReplyPlate_limit = {
         },
         LocateRate() {
             locateRate();
+        },
+        LocateReply() {
+            LocateReply();
         },
         test() {
             test()
@@ -537,6 +549,32 @@ const ReplyPlate_limit = {
 
         for (let buttonName in buttonGroup) {
             let buttonConfig = buttonGroup[buttonName];
+
+            // 如果有页面类型要求的话，需要判断页面类型来控制按钮是否展示
+            if(buttonConfig.pageType) {
+                const pageType = buttonConfig.pageType;
+                const matches = pageTypeMatch[pageType]
+                if(matches) {
+                    let passed = false;
+                    let href = location.href;
+
+                    console.log(matches)
+                    for (let _match of matches) {
+                        if(href.match(_match)) {
+                            console.log(href)
+                            console.log(_match + "")
+                            console.log("匹配，通过")
+                            passed = true
+                            break;
+                        }
+                    }
+
+                    if(!passed) {
+                        continue
+                    }
+                }
+            }
+
             if (buttonName === "查看今日奖励") {
                 // 需要有数据才显示按钮
                 if (!localStorage.getItem(key)) {
@@ -1261,6 +1299,15 @@ const ReplyPlate_limit = {
     // 跳转到评分位置
     function locateRate() {
         let rate = document.body.querySelector("#ak_rate")
+        rate.scrollIntoView({
+            behavior: 'smooth', // 平滑滚动
+            block: 'center'     // 垂直居中对齐视口
+        });
+    }
+
+    // 跳转到回复位置
+    function LocateReply() {
+        let rate = document.body.querySelector("#fastposteditor")
         rate.scrollIntoView({
             behavior: 'smooth', // 平滑滚动
             block: 'center'     // 垂直居中对齐视口
