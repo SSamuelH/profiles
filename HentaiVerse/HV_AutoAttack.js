@@ -2737,8 +2737,11 @@ try {
             return await asyncCheckRepair();
         }
         logSwitchAsyncTask(arguments);
-        const doc = $doc(await $ajax.fetch('?s=Forge&ss=re'));
-        const json = JSON.parse((await $ajax.fetch(gE('#mainpane>script[src]', doc).src)).match(/{.*}/)[0]);
+        // const doc = $doc(await $ajax.fetch('?s=Forge&ss=re'));
+        const doc = $doc(await $ajax.fetch('?s=Bazaar&ss=am&screen=repair'));
+        let _repair = await $ajax.fetch(gE('#mainpane>script[src]', doc).src)
+        console.log(_repair)
+        const json = JSON.parse((_repair).match(/{.*}/)[0]);
         const eqps = (await Promise.all(Array.from(gE('.eqp>[id]', 'all', doc)).map(async eqp => { try {
             const id = eqp.id.match(/\d+/)[0];
             const condition = 1 * json[id].d.match(/Condition: \d+ \/ \d+ \((\d+)%\)/)[1];
@@ -2886,11 +2889,14 @@ try {
             await Promise.all(arena.sites.map(async site => { try {
                 const doc = $doc(await $ajax.fetch(site));
                 if (site === '?s=Battle&ss=gr') {
-                    arena.token.gr = gE('img[src*="startgrindfest.png"]', doc).getAttribute('onclick').match(/init_battle\(1, '(.*?)'\)/)[1];
+                    let matchs = gE('img[src*="startgrindfest.png"]', doc).getAttribute('onclick').match(/init_battle\(1,'(.*?)'\)/)
+                    if(matchs && matchs.length > 1) {
+                        arena.token.gr = matchs[1];
+                    }
                     return;
                 }
                 gE('img[src*="startchallenge.png"]', 'all', doc).forEach((_) => {
-                    const temp = _.getAttribute('onclick').match(/init_battle\((\d+),\d+,'(.*?)'\)/);
+                    const temp = _.getAttribute('onclick').match(/init_battle\((\d+),\d+(,'(.*?)')?\)/);
                     arena.token[temp[1]] = temp[2];
                 });
             } catch (e) {console.error(e)}}));
@@ -4015,7 +4021,7 @@ try {
             };
             for (i = 0; i < buff.length; i++) {
                 const spellName = buff[i].getAttribute('onmouseover').match(/'(.*?)'/)[1];
-                const buffLastTime = buff[i].getAttribute('onmouseover').match(/\(.*,.*, (.*?)\)$/)[1] * 1;
+                const buffLastTime = buff[i].getAttribute('onmouseover').match(/\(.*,.*,(.*?)\)$/)[1] * 1;
                 if (isNaN(buffLastTime) || buff[i].src.match(/_scroll.png$/)) {
                     continue;
                 } else {
