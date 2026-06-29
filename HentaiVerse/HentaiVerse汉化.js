@@ -3871,7 +3871,7 @@
         if(!translated) return;
         mutations.forEach(mutation => {
             var elem = mutation.target;
-            if(elem.style.visibility!='hidden') {
+            if(elem.style && elem.style.visibility!='hidden') {
                 translateText(elem, dynamicDict.get(elem), true);
                 translateButtons(elem, dynamicDict.get(elem), true);
                 translateElemTitle(elem, dynamicDict.get(elem), true);
