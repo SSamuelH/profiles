@@ -4,6 +4,7 @@
 // @description    A comprehensive out-of-battle script for Hentaiverse
 // @homepageURL    https://forums.e-hentai.org/index.php?showtopic=211883
 // @supportURL     https://forums.e-hentai.org/index.php?showtopic=211883
+// @icon           https://hentaiverse.org/y/favicon.png
 // @version        4.2.1.01
 // @date           2026-06-08
 // @author         sssss2 & Translate By SSamuel
