@@ -286,13 +286,13 @@ function $qs(q,d) {return (d||document).querySelector(q);}
 function $qsa(q,d) {return Array.from((d||document).querySelectorAll(q));}
 function $doc(h) {const d=document.implementation.createHTMLDocument('');d.documentElement.innerHTML=h;return d;}
 function $element(t,p,a,f) {
-    if(a && a['textContent']){console.log('$element: ', a , " ", a['textContent']); a['textContent'] = inputTranslator(a['textContent'])};
-    if(a && typeof a==='string'){console.log('$element string: ', a)};
+    // if(a && a['textContent']){console.log('$element: ', a , " ", a['textContent']); a['textContent'] = inputTranslator(a['textContent'])};
+    // if(a && typeof a==='string'){console.log('$element string: ', a)};
     let e;if(t){e=document.createElement(t);}else if(t===''){e=document.createTextNode(a);a=null;}else{return document.createDocumentFragment();}if(a!==null&&a!==undefined){function ao(e,a){Object.entries(a).forEach(([an,av])=>{if(typeof av==='object'){let a;if(an in e){a=e[an];}else{e[an]={};a=e[an];}Object.entries(av).forEach(([an,av])=>{a[an]=av;});}else{if(an==='style'){e.style.cssText=av;}else if(an in e){e[an]=av;}else{e.setAttribute(an,av);}}});}function as(e,a){const an={'#':'id','.':'className','!':'style','/':'innerHTML'}[a[0]];if(an){e[an]=a.slice(1);}else if(a!==''){e.textContent=a;}}if(typeof a==='string'||typeof a==='number'){e.textContent=a;}else if(Array.isArray(a)){a.forEach((a)=>{if(typeof a==='string'||typeof a==='number'){as(e,a);}else if(typeof a==='object'){ao(e,a);}});}else if(typeof a==='object'){ao(e,a);}}if(f){if(typeof f==='function'){e.addEventListener('click',f);}else if(typeof f==='object'){Object.entries(f).forEach(([ft,fl])=>{e.addEventListener(ft,fl);});}}if(p){if(p.nodeType===1||p.nodeType===11){p.appendChild(e);}else if(Array.isArray(p)){if(['beforebegin','afterbegin','beforeend','afterend'].includes(p[1])){p[0].insertAdjacentElement(p[1],e);}else if(!isNaN(p[1])){p[0].insertBefore(e,p[0].childNodes[p[1]]);}else{p[0].insertBefore(e,p[1]);}}}
     return e;}
 
 function $input(o,p,a,f) {
-    console.log("$input: ", typeof o, " ", o);
+    // console.log("$input: ", typeof o, " ", o);
     if(CNFlag && typeof o==='object' && o[1]){o[1] = inputTranslator(o[1])};
     if(CNFlag && typeof o==='string'){o = inputTranslator(o)};
     if(typeof o==='string'){o=[o];}const [t,v,l,n,s]=o;let ao;if(!a){a={};ao=a;}else if(Array.isArray(a)){ao={};a.push(ao);}else if(typeof a==='object'){ao=a;}if(t==='select'){const i=$element('select',p,a,f);if(v){v.forEach((v)=>{v=split2(v,':');if(!v[1]){v[1]=v[0];}$element('option',i,{value:v[0],text:v[1]});});}return i;}ao.type=t;if(v||typeof v==='number'){ao.value=v;}if(l){const b=$element('label',p);const i=$element('input',b,a,f);if(n==='before'){b.prepend(l,' ');}else{b.append(' ',l);}if(s){$element('span',b);b.classList.add('hvut-label');}return i;}else{const i=$element('input',p,a,f);return i;}}
