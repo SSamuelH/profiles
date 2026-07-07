@@ -13,7 +13,7 @@ const el = document.createElement('button');
 el.innerText = '出售奖杯';
 el.onclick = async () => {
     el.disabled = true;
-    el.innerText = 'Selling...';
+    el.innerText = '出售中...';
     const dp = new DOMParser;
     let result = ['更新出售订单:'];
     let credit = 0;
@@ -32,12 +32,12 @@ el.onclick = async () => {
         [30031, 'Unicorn Horn (T5)', 7500],
         [30032, 'Noodly Appendage (T6)', 43800],
     ]) {
-        el.innerText = `出售 ${itemname} (Fetch count)`;
+        el.innerText = `出售 ${itemname} (获取库存)`;
         const url = `https://hentaiverse.org/?s=Bazaar&ss=mk&screen=browseitems&filter=tr&itemid=${itemid}`;
         const r = await fetch(url).then(r => r.text());
         const d = dp.parseFromString(r, 'text/html');
         const token = d.querySelector('#market_itemsell input[name="marketoken"]').value;
-        const count = parseInt(/You have (\d+) available to sell\./g.exec(d.getElementById('market_iteminfo').innerText)[1]);
+        const count = parseInt(/你有 (\d+) 可以出售\./g.exec(d.getElementById('market_iteminfo').innerText)[1]);
         const countCurrent = parseInt(d.getElementById('sellorder_batchcount').value);
         // 没有库存就跳过
         if (!count || count === countCurrent) continue;
@@ -63,7 +63,7 @@ el.onclick = async () => {
             console.log('Sell', itemname, 'as default price', default_price);
         }
         if(price) {
-            el.innerText = `出售 ${itemname} (Update order)`;
+            el.innerText = `出售 ${itemname} (更新订单)`;
             await fetch(url, {
                 method: 'POST',
                 body: new URLSearchParams({
@@ -75,12 +75,12 @@ el.onclick = async () => {
             }).then(r => r.text());
             result.push(`#${itemid} ${itemname} x ${count} @ ${price} C`);
             credit += Math.floor(count * price * 0.99);
-            el.innerText = `Selling ${itemname} (Waiting)`;
+            el.innerText = `出售 ${itemname} (等待中…)`;
             await new Promise(resolve => setTimeout(resolve, 1500));
         }
     }
-    result.push(`\n合计: ${credit} C (1% market fee applied)`);
-    el.innerText = `完成! 合计: ${credit} C (1% market fee applied)`;
+    result.push(`\n合计: ${credit} C (1% 手续费已扣除)`);
+    el.innerText = `完成! 合计: ${credit} C (1% 手续费已扣除)`;
     alert(result.join('\n'));
     location.reload();
 };
