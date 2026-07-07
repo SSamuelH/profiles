@@ -2249,12 +2249,14 @@ try {
         // 缓存当前链接，等战斗结束时再自动打开，下次打开链接时：
         // 1. 若新的遭遇未出现，进入已缓存的战斗链接
         // 2. 若新的遭遇已出现，则前一次已超时失效错过，重新获取新的一次
-        if (!isEngage) { // 战斗外，非自动跳转
-            eventpane.style.cssText += 'color:red;' // 链接标红提醒
-        } else if (getValue('battle')) { //战斗中
-            eventpane.style.cssText += 'color:gray;' // 链接置灰提醒
-        } else { // 战斗外，自动跳转
-            $ajax.openNoFetch(`${href}/${url}`);
+        if(eventpane) {
+            if (!isEngage) { // 战斗外，非自动跳转
+                eventpane.style.cssText += 'color:red;' // 链接标红提醒
+            } else if (getValue('battle')) { //战斗中
+                eventpane.style.cssText += 'color:gray;' // 链接置灰提醒
+            } else { // 战斗外，自动跳转
+                $ajax.openNoFetch(`${href}/${url}`);
+            }
         }
     }
 
