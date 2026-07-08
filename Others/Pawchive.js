@@ -1,0 +1,1149 @@
+// ==UserScript==
+// @name         Pawchive
+// @namespace    http://tampermonkey.net/
+// @version      V1.0
+// @description  Pawchive
+// @author       Sam
+// @match        https://pawchive.pw/**
+// @icon         data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAAWlBMVEUfHh7////5+fkzMjJEQ0PX19esq6vs7Ozm5uZubW0rKio8OzsmJSW4uLdfXl7y8vLg39+Yl5fOzs3DwsKHhoZLSkqhoKBXV1d7e3rIyMiRkZCMjIt2dXVSUlHrlbybAAABAUlEQVQ4y92S2a7DIAxEGTBbCISsbbb//80bS6iKEqXvt/MC0hyNwbb4Wam0tr569mmWgJweidCDZV9P+RFNHIxJ94T6Ne1CGVh/3FVQ9dVvG5hqkNAjbUa7bOhCrECXvIR0VoLVq09dH/h1OcdJzWBJlw/SF3/TcuXzHRs7jr212njiz7QFmADNEd4Ck6iIOHrUwFKA8TAGIZID4EgIIkqtO7fCAFrtGQDHemedZPb9ef+rQTNoSN0BOSxg5YVOLYgyatm91c7FyB3oEMRZKXYwqhQL7YFeB3AYfVWK+UrdpkBbaUttIk/pBtTVXCLU0xrwDNLXNetcG8Q3jST+r/4AvW8KgFIEhZIAAAAASUVORK5CYII=
+// @grant        GM_addStyle
+// @grant        GM_setValue
+// @grant        GM_getValue
+// @grant        GM_getResourceText
+// @require      https://cdn.bootcdn.net/ajax/libs/jquery/2.2.4/jquery.min.js
+// @require      https://cdn.bootcdn.net/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js
+// @require      https://raw.githubusercontent.com/SSamuelH/profiles/refs/heads/main/deps/js/Tools/datetime.js
+// @require      https://raw.githubusercontent.com/SSamuelH/profiles/refs/heads/main/deps/js/Tools/buttons.js
+// @require      https://raw.githubusercontent.com/SSamuelH/profiles/refs/heads/main/deps/js/Tools/tools.js
+// @resource buttonCSS https://raw.githubusercontent.com/SSamuelH/profiles/refs/heads/main/deps/css/button.css
+// ==/UserScript==
+
+const btnSwitchName = "btnSwitch"
+const btnSizeName = "btnSize"
+
+const web_prefix = "pwc"
+const fileOriginUrl = "https://file.pawchive.pw"
+
+const buttonGroup = {
+    "复制名称": {"name": "copyName", "func": "copyName", "color": "purple"},
+    "复制名称（带ID）": {"name": "copyName_withId", "func": "copyName_withId", "color": "purple"},
+    "复制图片": {"name": "copyPics", "func": "copyPics", "color": "green", "hotkey": "Q"},
+    // "复制图片（去首张）": {"name": "copyPics_withoutFirst", "func": "copyPics_withoutFirst", "color": "green", "hotkey": "Q"},
+    "复制图片（文件夹）": {"name": "copyPics_folder", "func": "copyPics_folder", "color": "green", "hotkey": "W"},
+    "复制附件": {"name": "copyAttachments", "func": "copyAttachments", "color": "blue", "hotkey": "E"},
+    // "复制附件（原名）": {"name": "copyAttachments_origin", "func": "copyAttachments_origin", "color": "blue"},
+    "复制附件（序号）": {"name": "copyAttachments_serial", "func": "copyAttachments_serial", "color": "blue", "hotkey": "R"},
+    "复制附件（文件夹）": {"name": "copyAttachments_folder", "func": "copyAttachments_folder", "color": "blue", "hotkey": "T"},
+    "复制所有": {"name": "copyAll", "func": "copyAll", "hotkey": "A"},
+    "复制所有（文件夹）": {"name": "copyAll_folder", "func": "copyAll_folder", "hotkey": "S"},
+    "下载文本内容": {"name": "downloadContent", "func": "downloadContent", "color": "yellow"},
+    "设置": {"name": "config", "func": "config", "color": "black"},
+};
+
+const configButGroup = {
+    "显示位置": {"name": "showPosition", "func": "showPosition"},
+    "按钮大小": {"name": "changeSize", "func": "changeSize"},
+}
+const configBtnGroupId = 'my_configBtnGroup'
+
+// 按钮组到底部的距离
+const btnTBPx = 50;
+const btnLRPx = 10;
+
+// 表位置
+const trHeight = 30;
+const tableWidth = 640;
+const tableHeight = 800;
+
+// 视频控件高度
+const videoHeight = 500;
+
+// 正则匹配
+const hrefMatch = /(\w*)?\/user\/(.+)?\/post\/((\w|-)*)?$/;
+const userHrefMatch = /(\w*)?\/user\/([\w|\.]+)?(\?.+)?$/;
+
+const LIKE_COLOR = "GoldenRod";
+const DISLIKE_COLOR = "Maroon";
+const VIEWED_COLOR = "LightYellow";
+const DEFAULT_COLOR = "GRAY";
+
+const source_name_match = /(\w*)_source/;
+
+(function () {
+    console.log(" Pawchive start ");
+
+    const targetNode = document.body;
+
+    function test() {
+        let node = targetNode.querySelector('.fluid_video_wrapper');
+
+        if(node) {
+            console.log("有视频")
+        } else {
+            console.log("没视频")
+        }
+    }
+
+    test();
+
+    const config = {childList: true, subtree: true};
+    const callback = function (mutationsList) {
+        console.log(" Pawchive callback ");
+        let href = window.location.href
+
+        if (href.match(hrefMatch)) {
+            console.log(" 当前在内容页面 ", href);
+            for (const mutation of mutationsList) {
+                if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                    for (let node of mutation.addedNodes) {
+                        // console.log(node)
+
+                        if ((node.nodeName == "DIV" || node.nodeName == "SECTION" || node.nodeName == "MAIN")) {
+
+                            // 如果是发布内容
+                            if(node?.querySelector('.post__actions')) {
+                                showViewAndLike(node)
+                            }
+                        } else if (node.nodeName == "VIDEO") {
+                            let node = targetNode.querySelector('.fluid_video_wrapper');
+
+                            // 如果有视频控件
+                            if(targetNode.querySelector('.fluid_video_wrapper')) {
+                                console.log("找到了视频控件 ");
+                                let all = targetNode.querySelectorAll('.fluid_video_wrapper');
+                                for(let vw of all){
+                                    vw.style.height = videoHeight + 'px';
+                                }
+                            }
+                        } else {
+                        }
+                    }
+                }
+            }
+        } else if (href.match(userHrefMatch)) {
+
+            console.log(" 当前在用户页面 ", href);
+            for (const mutation of mutationsList) {
+                if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                    for (let node of mutation.addedNodes) {
+                        if ((node.nodeName == "DIV" || node.nodeName == "SECTION" || node.nodeName == "MAIN")
+                            && node.querySelector('.card-list__items')) {
+                            let matchArray = window.location.href.match(userHrefMatch);
+                            const platform = matchArray?.[1] || '';
+                            const userId = matchArray?.[2] || '';
+                            console.log(platform, userId)
+
+                            let items = node.querySelector('.card-list__items')?.children;
+                            console.log(items)
+
+                            if(items) {
+                                dealUserLikes(userId, items)
+                            }
+                        } else {
+                            // console.log(node.nodeName)
+                        }
+                    }
+                }
+            }
+        } else {
+            console.log(" 不知道在哪： ", href);
+        }
+
+    };
+    const observer = new MutationObserver(callback);
+    observer.observe(targetNode, config);
+
+    const likesPrefix = "LIKES_"
+
+    /*
+    * 处理用户的发布列表
+    * 增加已查看和喜欢的配置
+    * */
+    function dealUserPostlist() {
+        console.log("dealUserPostlist")
+        let items = document.querySelector('.card-list__items')?.children;
+        if(items) {
+            const userdata = getUserData()
+
+            const platform = userdata.platform
+            const userId = userdata.id
+            getPostname()
+
+            dealUserLikes(userId, items)
+        }
+    }
+
+    function dealUserLikes(userId, items) {
+        let likes = getUserLikes(userId);
+        console.log(likes)
+        for (let item of items) {
+            let color = undefined;
+            let postId = item.getAttribute('data-id');
+
+            let like = likes[postId]
+            if (like == undefined) {
+                continue
+            } else {
+                // 仅看过
+                if (like["viewed"]) {
+                    color = VIEWED_COLOR
+                }
+                if (like["liked"] != undefined) {
+                    if (like["liked"]) {
+                        color = LIKE_COLOR
+                    } else {
+                        color = DISLIKE_COLOR
+                    }
+                }
+            }
+
+            item.querySelector('footer').style.backgroundColor = color;
+        }
+    }
+
+    // 内容页面展示按钮组
+    function showViewAndLike(node) {
+        let buttons = node.querySelector('.post__actions')
+
+        if(!buttons) {
+            return
+        }
+        if(buttons.querySelector("#copy_LIKE")) {
+            console.log("按钮已存在")
+            return
+        }
+
+        let matchArray = window.location.href.match(hrefMatch);
+        const userId = matchArray?.[2] || '';
+        const postId = matchArray?.[3] || '';
+
+        // 数据
+        let like = getUserPostLike(userId, postId);
+
+        let likeColor = DEFAULT_COLOR
+        if (like["liked"] === true) {
+            likeColor = LIKE_COLOR
+        } else if (like["liked"] === false) {
+            likeColor = DISLIKE_COLOR
+        }
+
+        // 创建按钮
+        let likeButton = createButtonTag("", "LIKE", likeColor, "8px 4px");
+        buttons.appendChild(likeButton)
+        if(like["liked"] === false) {
+            likeButton.innerText = "DISLIKE"
+        }
+
+        // 创建按钮
+        let viewButton = createButtonTag("", "VIEWED", like["viewed"] ? VIEWED_COLOR : DEFAULT_COLOR, "8px 4px");
+        buttons.appendChild(viewButton)
+
+        // likeButton
+        likeButton.onclick = function () {
+            console.log("likeButton 触发单击事件")
+
+            // 修改数值
+            like["liked"] = !like["liked"]
+            setUserPostLike(userId, postId, like["liked"]);
+            // 修改颜色
+            likeButton.style.color = like["liked"] ? LIKE_COLOR : DISLIKE_COLOR;
+            viewButton.style.color = VIEWED_COLOR;
+
+            // 修改文字
+            likeButton.innerText = like["liked"] ? "LIKE" : "DISLIKE";
+        }
+
+        // 双击事件，取消
+        likeButton.dbclick = function () {
+            console.log("likeButton 触发双击事件")
+            // 修改数值
+            like["liked"] = undefined
+            setUserPostLike(userId, postId, like["liked"]);
+
+            // 修改颜色
+            likeButton.style.color = DEFAULT_COLOR;
+            likeButton.innerText = "LIKE"
+        }
+
+        // likeButton
+        viewButton.onclick = function () {
+            if (!like["viewed"]) {
+                like["viewed"] = true;
+                // 修改颜色
+                viewButton.style.color = VIEWED_COLOR;
+                setUserPostLike(userId, postId, undefined, true)
+            }
+            // 看过时，点击不处理
+        }
+
+        // 直接触发已经看过
+        viewButton.click();
+    }
+
+    // 获取喜欢的列表
+    function getUserLikes(userId) {
+        let likes = JSON.parse(localStorage.getItem(`${web_prefix}_${likesPrefix}_${userId}`) || "{}")
+        return likes
+    }
+
+
+    function getUserPostLike(userId, postId) {
+        let likes = getUserLikes(userId)
+        let ob = likes[postId] || {
+            viewed: false
+        }
+
+        return ob
+    }
+
+    // 设置是否喜欢
+    function setUserPostLike(userId, postId, like, viewed) {
+        console.log(userId, postId, like);
+
+        let likes = getUserLikes(userId)
+        let ob = likes[postId] || {
+            viewed: true
+        }
+
+        // 设置是否喜欢
+        ob.liked = like
+        if (viewed) {
+            ob.viewed = viewed
+        }
+        likes[postId] = ob
+        localStorage.setItem(`${web_prefix}_${likesPrefix}_${userId}`, JSON.stringify(likes))
+    }
+
+    // 方法组
+    const funcs = {
+        copyName() {
+            copyName();
+        },
+        copyName_withId() {
+            copyName(true);
+        },
+        copyPics() {
+            copyAll('NoFolder', 'pic');
+        },
+        copyPics_folder() {
+            copyAll('', 'pic');
+        },
+        copyPics_withoutFirst() {
+            copyAll('NoFolder', 'pic_withoutFirst');
+        },
+        copyAttachments() {
+            copyAll('NoFolder', 'attachment');
+        },
+        copyAttachments_serial() {
+            copyAll('NoFolder', 'attachment_serial');
+        },
+        copyAttachments_folder() {
+            copyAll('', 'attachment');
+        },
+        copyAll() {
+            copyAll('NoFolder', 'all');
+        },
+        copyAll_folder() {
+            copyAll('', 'all');
+        },
+        downloadContent() {
+            downloadContent();
+        },
+        config(event) {
+            // 生成一套按钮组
+            console.log(`点击的位置是 X=${event.clientX},Y=${event.clientY}`)
+            const configBtnGroup = document.getElementById(configBtnGroupId);
+            if (configBtnGroup) {
+                showDiv(configBtnGroup, event.clientX, event.clientY)
+            }
+        },
+        showPosition(event) {
+            let positionDiv = document.getElementById('my_positionDiv');
+
+            // 如果没有这个div 就生成一个
+            if (!positionDiv) {
+                positionDiv = document.createElement('div');
+                positionDiv.id = 'my_positionDiv'
+                let divStyle = `z-index:1001;position:fixed;margin:5px;padding:10px;border-radius:1em;` +
+                    `background-color: rgba(128, 128, 128, 0.5);` + `display:none;`
+                positionDiv.style.cssText = divStyle;
+                positionDiv.style.display = 'none';
+                positionDiv.className = 'my_position_container'
+                positionDiv.innerHTML = `
+<div class="my_position_square my_position_ul">↖</div>
+<div class="my_position_square my_position_ur">↗</div>
+<div class="my_position_square my_position_dl">↙</div>
+<div class="my_position_square my_position_dr">↘</div>
+`
+
+                // 加到页面上
+                document.body.appendChild(positionDiv)
+
+                // 添加关闭事件
+                setCloseEvent("my_positionDiv", "btn_showPosition")
+
+                // 添加点击事件
+                document.body.querySelectorAll('.my_position_square').forEach((item) => {
+                    item.addEventListener('click', (event) => {
+                        const classList = item.className.split(' ');
+                        const udlr = classList[1].replace('my_position_', '')
+
+                        console.log(udlr, udlr.substring(0, 1), udlr.substring(1))
+                        document.body.querySelectorAll('.my_position_square').forEach((item) => {
+                            item.classList.remove('active');
+                        })
+
+                        item.classList.add('active');
+
+                        // 切换位置
+                        changePosition(udlr.substring(0, 1), udlr.substring(1));
+                    });
+                });
+            }
+
+            positionDiv.style.display = 'grid'; // 临时显示以应用网格
+            if (positionDiv) {
+                // 在指定位置显示
+                showDiv(positionDiv, event.clientX, event.clientY)
+
+                // left or right
+                const lr = GM_getValue("lr") || "r"
+                // up or down
+                const ud = GM_getValue("ud") || "u"
+
+                let name = `.my_position_square.my_position_${ud}${lr}`
+                console.log(name)
+                // 指定的亮起来
+                document.body.querySelector(name).classList.add("active")
+            }
+
+        },
+        changeSize() {
+            changeSize();
+        }
+    }
+
+    // 初始化按钮
+    function init() {
+        console.log(" Pawchive init ");
+        // left or right
+        const lr = GM_getValue("lr") || "r"
+        // up or down
+        const ud = GM_getValue("ud") || "u"
+        // large or small
+        const size = GM_getValue(btnSizeName, "large")
+
+        let body = document.body;
+        let div = document.createElement('div');
+        div.id = "my_buttonGroup"
+        div.style.cssText = `z-index:999;position:fixed;margin:10px;pointer-events: none;` +
+            `${lr == "l" ? "left" : "right"}:${btnLRPx}px;${ud == "d" ? "bottom" : "top"}:${btnTBPx}px;` +
+            `text-align:${lr == "l" ? "left" : "right"}`
+
+        let btnStyle = `z-index:999;position:sticky;margin:5px;pointer-events: auto;`
+
+        let i = 1
+        for (let buttonName in buttonGroup) {
+            let btn = document.createElement('button');
+            btn.id = "btn_" + buttonGroup[buttonName].func;
+            btn.className = `my_button ${(buttonGroup[buttonName].color || 'red')} ${nextSizeMap.hasOwnProperty(size) ? size : "large"}`
+
+            btn.style.cssText = btnStyle;
+
+            btn.textContent = buttonName;
+            btn.addEventListener('click', (event) => {
+                funcs[buttonGroup[buttonName].func](event);
+            });
+
+            if (!btn.textContent) {
+                continue
+            }
+
+            div.appendChild(btn);
+            div.appendChild(document.createElement('br'));
+            i += 1
+        }
+
+        body.appendChild(div);
+
+        // 设置按钮组
+        let configDiv = document.createElement('div');
+        let configDivStyle = `z-index:1000;position:fixed;margin:5px;padding:10px;border-radius:1em;` +
+            `background-color: rgba(128, 128, 128, 0.5);` + `display:none;`
+        let configBtnstyle = `z-index:1000;position:sticky;margin:5px;`
+
+        configDiv.id = configBtnGroupId;
+        configDiv.style.cssText = configDivStyle;
+        for (let buttonName in configButGroup) {
+            let btn = document.createElement('button');
+            btn.id = "btn_" + configButGroup[buttonName].func;
+            btn.className = `my_button ${(configButGroup[buttonName].color || 'red')} ${(size == "small" ? "small" : (size == "medium" ? "medium" : "large"))}`
+            // btn.dataset.action = configButGroup[buttonName].func;
+
+            btn.style.cssText = configBtnstyle;
+
+            btn.textContent = buttonName;
+            // btn.addEventListener('click', (event) => {
+            //     funcs[configButGroup[buttonName].func](event);
+            // });
+
+            if (!btn.textContent) {
+                continue
+            }
+
+            configDiv.appendChild(btn);
+            configDiv.appendChild(document.createElement('br'));
+
+            i += 1
+        }
+
+        body.addEventListener('click', function(e) {
+            // 判断点击的是不是我们的自定义按钮（用class标记区分）
+            const targetBtn = e.target.closest('.my_button');
+            if (!targetBtn) return;
+
+            console.log(targetBtn.innerText)
+
+            // 根据按钮自定义属性区分功能
+            const action = targetBtn.id.replace("btn_", "");
+            console.log(action)
+            funcs[action](e);
+        });
+
+        body.appendChild(configDiv);
+        setCloseEvent(configBtnGroupId, "btn_config")
+
+        dealUserPostlist()
+        showViewAndLike(body)
+
+        check()
+    }
+
+    init();
+    initHotkey()
+
+    // 检查
+    function check() {
+        // 每隔两秒检测按钮组是否存在
+        timer(2 * 1000, () => {
+            const element = document.body.querySelector('#my_buttonGroup');
+            if (element) {
+                if (element.style.display == "none") {
+                    element.style.display == "block"
+                }
+            } else {
+                // 初始化
+                init()
+                initHotkey()
+            }
+            check()
+        })
+    }
+
+    // todo 初始化热键
+    function initHotkey() {
+
+        let hotkeyGroup = {}
+        for (let buttonName in buttonGroup) {
+            let hotkey = buttonGroup[buttonName]["hotkey"]
+            if(hotkey) {
+                hotkeyGroup[hotkey] = {
+                    "hotkey": hotkey,
+                    "desc": buttonName,
+                    "func": buttonGroup[buttonName]["func"]
+                }
+            }
+        }
+        console.log(hotkeyGroup)
+
+        // 监听全局键盘按下事件
+        document.addEventListener('keydown', function(e) {
+            // 核心判断条件（全部满足才触发）
+            const isKey = hotkeyGroup.hasOwnProperty(e.key.toUpperCase()) ;
+            const isPageFocused = document.hasFocus(); // 当前页面是否获得焦点 ✅
+
+            // ✅ 新增：判断当前是否在输入框内（输入框按键不触发）
+            const isInputing = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName);
+            const isEditable = document.activeElement.isContentEditable; // 富文本编辑器
+            // ✅ 关键修复：检测是否按下了Ctrl/Shift/Alt修饰键
+            const isModifierKeyPressed = e.ctrlKey || e.shiftKey || e.altKey || e.metaKey; // metaKey是Mac的Command键
+
+            // 满足条件：按键 + 页面聚焦
+            if (isKey && isPageFocused && !isInputing && !isEditable && !isModifierKeyPressed) {
+                // 1. 阻止按键的原生行为（不会在输入框打字、不会触发其他快捷键）
+                e.preventDefault();
+                e.stopPropagation();
+
+                // 2. 触发指定方法
+                funcs[hotkeyGroup[e.key.toUpperCase()].func](event);
+                Toast(`${hotkeyGroup[e.key.toUpperCase()].desc}`)
+            }
+        }, true);
+    }
+
+    // 显示DIV
+    function showDiv(div, x, y) {
+        console.log('显示 ', div.id)
+
+        // left or right
+        const lr = GM_getValue("lr") || "r"
+        // up or down
+        const ud = GM_getValue("ud") || "u"
+
+        // 如果弹窗已显示，则进行关闭
+        if (div.style.display != 'none' && div.style.display != 'grid') {
+            div.style.display = 'none';
+            return;
+        }
+
+        // 整体在右边，就向左边显示
+        if (lr == 'r') {
+
+            div.style.left = null
+            div.style.right = window.innerWidth - x + 'px';
+        } else {
+            div.style.left = x + 'px';
+            div.style.right = null
+        }
+
+        // 整体在上面，就向下面显示
+        if (ud == 'u') {
+            div.style.top = y + 'px';
+            div.style.bottom = null
+        } else {
+            div.style.top = null
+            div.style.bottom = window.innerHeight - y + 'px';
+        }
+
+        // 显示配置按钮组
+        if (div.style.display != 'grid') {
+            div.style.display = 'block';
+        }
+    }
+
+    function changePosition(ud, lr) {
+        changeUD(ud)
+        changeLR(lr)
+    }
+
+    function changeUD(ud) {
+        GM_setValue("ud", ud != "u" ? "d" : "u")
+
+        if (ud != 'u') {
+            console.log("换到下边")
+            document.querySelector('#my_buttonGroup').style.top = null
+            document.querySelector('#my_buttonGroup').style.bottom = btnTBPx + 'px'
+        } else {
+            console.log("换到上边")
+            document.querySelector('#my_buttonGroup').style.top = btnTBPx + 'px';
+            document.querySelector('#my_buttonGroup').style.bottom = null
+        }
+    }
+
+    function changeLR(lr) {
+        GM_setValue("lr", lr != "l" ? "r" : "l")
+
+        if (lr != 'l') {
+            console.log("换到右边")
+            document.querySelector('#my_buttonGroup').style.textAlign = 'right';
+            document.querySelector('#my_buttonGroup').style.left = null
+            document.querySelector('#my_buttonGroup').style.right = btnLRPx + 'px'
+        } else {
+            console.log("换到左边")
+            document.querySelector('#my_buttonGroup').style.textAlign = 'left';
+            document.querySelector('#my_buttonGroup').style.left = btnLRPx + 'px';
+            document.querySelector('#my_buttonGroup').style.right = null
+        }
+    }
+
+    // 创建弹窗
+    function createIFrame(id) {
+        // 添加弹窗
+        let htmlDivElement = document.createElement("div");
+        htmlDivElement.id = id;
+        htmlDivElement.className = "my_popup";
+        htmlDivElement.style.display = "none";
+        htmlDivElement.innerHTML = `
+    <div class="popup-arrow" style="">
+        <iframe id="pop_iframe_${id}" frameborder="no" scrolling="auto"  style="overflow-y：auto"></iframe>
+    </div>`
+        targetNode.appendChild(htmlDivElement);
+    }
+
+    // 关闭弹窗
+    function closePopup(id) {
+        // console.log('关闭 ', id)
+        document.getElementById(id).style.display = 'none';
+        let iframe = document.getElementById(`pop_iframe_${id}`);
+        if (iframe) {
+            var iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            iframeDoc.body.style.display = 'none';
+        }
+    }
+
+    // 设置关闭事件
+    function setCloseEvent(id, parentId) {
+        // 点击页面其他地方关闭弹窗
+        document.addEventListener('click', function () {
+            closePopup(id)
+        });
+
+        // 防止弹窗内部点击关闭弹窗
+        document.getElementById(id).addEventListener('click', function (e) {
+            e.stopPropagation();
+        });
+
+        if (parentId) {
+            // 防止点击父级按钮时关闭弹窗
+            document.getElementById(parentId).addEventListener('click', function (e) {
+                e.stopPropagation();
+            });
+        }
+    }
+
+    function popupEvent(buttonId, popupId, callback) {
+        // 如果弹窗按钮存在
+        const button = document.getElementById(buttonId);
+        if (button) {
+            createIFrame(popupId)
+
+            // 增加点击监听 显示弹出窗口
+            button.addEventListener('click', function (e) {
+                // 如果弹窗已显示，则进行关闭
+                if (document.getElementById(popupId).style.display != 'none') {
+                    closePopup(popupId);
+                    return;
+                }
+
+                callback(e, popupId);
+
+                // 阻止事件冒泡
+                e.stopPropagation();
+            });
+
+            setCloseEvent(popupId);
+        }
+    }
+
+    function createPopup(e, popupId, HTMLFunc, iframeFunc, endFunc) {
+        const popup = document.getElementById(popupId);
+        const btn = e.target;
+
+        // 计算弹窗位置（左下角）
+        const rect = btn.getBoundingClientRect();
+        const lr = GM_getValue("lr") || "r"
+        if (lr == 'l') {
+            popup.style.left = (btnLRPx + 20) + 'px';
+        } else {
+            popup.style.right = (btnLRPx + 20) + 'px';
+        }
+        popup.style.top = (rect.bottom + 20) + 'px';
+
+        let html = HTMLFunc()
+
+        let iframe = document.getElementById(`pop_iframe_${popupId}`);
+        var iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+        iframeDoc.body.innerHTML = html;
+        iframeDoc.body.style.display = 'block';
+
+        // 显示弹窗
+        popup.style.display = 'block';
+        popup.style.width = tableWidth + 'px';
+        popup.style.minHeight = tableHeight - 10 + 'px';
+        iframe.style.width = tableWidth + 'px';
+        iframe.style.minHeight = tableHeight + 'px';
+
+        // 对iFram做特殊处理
+        if (iframeFunc) {
+            iframeFunc(iframe, popup)
+        }
+
+        if (endFunc) {
+            endFunc(iframe);
+        }
+    }
+
+    // 发布内容
+    function postApi() {
+        const href = window.location.href
+        let matchArray = href.match(hrefMatch);
+        if(!matchArray) {
+            console.log("当前不在内容页面")
+            return
+        }
+        const platform = matchArray?.[1] || '';
+        const userId = matchArray?.[2] || '';
+        const postId = matchArray?.[3] || '';
+
+        // 判断是否已有作品id(兼容按左右方向键翻页的情况)
+        const key = `${web_prefix}_data_${userId}_${postId}`
+        let postData = JSON.parse(localStorage.getItem(key) || '{}');
+        if (!postData || String(postData?.id) !== String(postId)) {
+            $.ajax({
+                url: `/api/v1/${platform}/user/${userId}/post/${postId}`,
+                header: {
+                    Accept: 'text/css'
+                },
+                dataType: 'json',
+                async: false,
+                success: (body) => {
+                    if (body) {
+                        localStorage.setItem(key, JSON.stringify(body));
+                        Toast(`GET ${postId} of ${userId}`)
+                        postData = body
+                    }
+                },
+            });
+        }
+        return postData;
+    }
+
+    // 个人信息
+    function getUserData() {
+        const href = window.location.href;
+        let matchArray = href.match(hrefMatch);
+        if(!matchArray) {
+            matchArray = href.match(userHrefMatch);
+            if(matchArray) {
+                console.log(" 当前在用户页面 ")
+            } else {
+                console.log(" 不知道在哪： ", href);
+            }
+        } else {
+            console.log(" 当前在内容页面 ");
+        }
+        console.log(matchArray)
+        const platform = matchArray?.[1] || '';
+        const userId = matchArray?.[2] || '';
+
+        let username = document.querySelector(".post__user-name")?.innerText;
+        if(!username) {
+            username = document.querySelector("meta[name=\"artist_name\"]")?.content;
+        }
+
+        // 判断是否已有作者id
+        const key = `${web_prefix}_user_${platform}_${userId}`
+        console.log(key)
+        let profileData = JSON.parse(localStorage.getItem(key) || '{}');
+        if (!profileData || String(profileData?.id) !== String(userId)) {
+            profileData = {
+                name: username,
+                id: userId,
+                platform: platform,
+            }
+            localStorage.setItem(key, JSON.stringify(profileData));
+        }
+        return profileData;
+    }
+
+    const buttonCSS = GM_getResourceText("buttonCSS");
+    GM_addStyle(buttonCSS);
+    const popupCSS = GM_getResourceText("popupCSS");
+    GM_addStyle(popupCSS);
+
+    function getPostId() {
+        let matchArray = window.location.href.match(hrefMatch);
+        if(matchArray) {
+            const postId = matchArray?.[3] || '';
+
+            return postId;
+        } else {
+            Toast(" 非内容页面，无法获取ID ")
+        }
+    }
+
+    function getPostname(withId) {
+        let profileData = getUserData()
+
+        const key = `${web_prefix}_post_name_${profileData.id}`
+        let postnames = JSON.parse(localStorage.getItem(key) || '{}');
+        let id = getPostId();
+
+        // 如果缓存里有名称记录，就从缓存中取
+        if(postnames[id]) {
+            if(withId && postnames[id].nameWithId) {
+                return postnames[id].nameWithId;
+            } else {
+                return postnames[id].name;
+            }
+        }
+
+        // 获取内容信息（包含标题）
+        let postData = getPostdata();
+
+        if (profileData && postData && postData.title) {
+            // 文件标题
+            let username = profileData.name;
+            let platform = profileData.platform;
+            let title = postData.title;
+            let id = postData.id;
+
+            // 如果标题以.结尾
+            if(title.trim().endsWith('.')) {
+                title = title.trim().substring(0, title.trim().length - 1)
+            }
+
+            let datetime = postData.published;
+            let _date = new Date(datetime)
+
+            // 转换时间格式
+            let date = formatDate(_date, 'YYYY年MM月DD日');
+
+            let name =
+                "@".concat(username, " ", "[", platform, "]", " - ", "(", date, ")",
+                    " ", transfer(title));
+            let nameWithId =
+                "@".concat(username, " ", "[", platform, "]", " - ", "(", date, ")",
+                    ` (${id}) `, transfer(title));
+            let postname = {
+                name: name,
+                nameWithId: nameWithId,
+            }
+            postnames[id] = postname;
+
+            // 缓存下来
+            localStorage.setItem(key, JSON.stringify(postnames));
+
+            return withId? nameWithId : name;
+        }
+    }
+
+    function getPostdata() {
+        const href = window.location.href
+        let matchArray = href.match(hrefMatch);
+        if(!matchArray) {
+            console.log("当前不在内容页面")
+            return
+        }
+        const platform = matchArray?.[1] || '';
+        const userId = matchArray?.[2] || '';
+        const postId = matchArray?.[3] || '';
+
+        // 判断是否已有作品id(兼容按左右方向键翻页的情况)
+        const key = `${web_prefix}_post_data_${userId}`
+        let postData = JSON.parse(localStorage.getItem(key) || '{}');
+        if(postData && postData[postId]) {
+            return postData[postId];
+        } else {
+            let _postDate = postApi()
+            postData[postId] = _postDate;
+            localStorage.setItem(key, JSON.stringify(postData));
+            return _postDate;
+        }
+    }
+
+    function copyName(withId) {
+        let name = getPostname(withId);
+        console.log(name)
+
+        const clipboardObj = navigator.clipboard;
+        clipboardObj.writeText(name)
+        Toast(`copyName successfully copied!`)
+    }
+
+    function copyAll(mode, type) {
+        console.log("copyAll")
+        let profileData = getUserData()
+        let postData = postApi();
+        console.log(postData);
+        console.log(JSON.stringify(postData));
+
+        if (profileData && postData) {
+            let name = getPostname();
+            console.log("this name is : ", name)
+
+            let urls = `#R,${window.location.href}\n`
+
+            // 如果不是非文件夹模式，就按文件夹下载
+            if (mode != 'NoFolder') {
+                urls += `#O,F:\\Downloads\\Default\\Other\\Kemono\\${name.trim()}\n`
+            }
+
+            let isPic = false
+            if(type.startsWith("pic")) {
+                isPic = true
+            }
+
+            // 添加封面
+            if(postData.file && postData.file.name?.toLowerCase().startsWith("cover")) {
+                urls += `${isPic?'00_':''}${postData.file.name},${fileOriginUrl}/data${postData.file.path}\n`
+            }
+
+            // 处理附件 视频/ZIP
+            if ((type == 'all' || type == 'attachment' || type == 'attachment_origin' || type == 'attachment_serial')
+                && ((postData.attachments && postData.attachments.length > 0) || (postData.attachments && postData.attachments.length > 0))) {
+                let attachments = postData.attachments.length > 0 ? postData.attachments : postData.attachments
+                let postAttachs = postData.attachments.length > 0 ? false : true
+
+                let num = 1
+
+                if (attachments.length == 1) {
+                    let attach = attachments[0]
+
+                    let url = postAttachs ? `${fileOriginUrl}/data${attach.path}` : `${fileOriginUrl}/data${attach.path}`
+
+                    let fileSuffix = getFileSuffix(attach.name);
+
+                    let filename = `${name.trim()}.${fileSuffix}`
+
+                    let originName = getFilePrefix(attach.name)
+
+                    // 如果匹配格式的话，就不带原始文件名
+                    if(originName.match(source_name_match)) {
+
+                    } else if (attach.name.length <= 50 && attach.name.length != (36 + 4)) {
+                        // 如果原始文件名很短
+                        filename = `${name.trim()} ${attach.name}`
+                    }
+
+                    urls += `${filename},${url}\n`
+                } else {
+                    // 用来保存下载地址，遍历是否有重复数据
+                    const set = new Set()
+
+                    for (let attach of attachments) {
+                        if(set.has(attach.path)) {
+                            console.log("下载地址重复了，不做任何处理")
+                            continue
+                        }
+
+                        let filename = ''
+                        let url = postAttachs ? `${fileOriginUrl}/data${attach.path}` : `${fileOriginUrl}/data${attach.path}`
+
+                        if (attach.extension === ".mp4" || attach.extension === ".m4v" || attach.extension === ".mov" || attach.extension === ".webm"
+                            || attach.extension === ".rar" || attach.extension === ".zip" || attach.extension === ".bin" || attach.extension === ".pdf"
+                        ) {
+
+                            let twoDigitText = num.toString().padStart(2, '0');
+                            filename = name.trim().concat(' ', twoDigitText, attach.extension)
+
+                            if (type != 'attachment_serial' && attach.name.length <= 50) {
+                                if (type == 'attachment_origin') {
+                                    filename = `${attach.name}`
+                                } else {
+                                    let originName = getFilePrefix(attach.name)
+                                    // 如果匹配格式的话，就不带原始文件名
+                                    if(originName.match(source_name_match)) {;
+                                        filename = name.trim().concat(' ', twoDigitText, attach.extension)
+                                        if (mode != 'NoFolder') {
+                                            filename = twoDigitText + attach.extension
+                                        }
+                                    } else {
+                                        filename = name.trim().concat(' ', twoDigitText, ' ', attach.name)
+                                        if(type == 'attachment') {
+                                            filename = name.trim().concat(' ', attach.name)
+                                        }
+                                    }
+                                }
+                            }
+
+                            num += 1
+                        } else {
+                            filename = name.trim().concat(' ', attach.name)
+                            if (type != 'attachment_serial' && attach.name.length <= 50) {
+                                filename = `${attach.name}`
+                            }
+                        }
+
+                        urls += `${filename},${url}\n`
+                        set.add(attach.path)
+                    }
+                }
+            } else {
+                console.log("not found attachments")
+            }
+
+            // 处理图片
+            if ((type == 'all' || type == 'pic' || type == 'pic_withoutFirst') && postData.attachments && postData.attachments.length > 0) {
+                urls += ""
+                let num = 1
+
+                if (postData.attachments.length == 1 ||
+                    (postData.attachments.length == 2 && type == 'pic_withoutFirst')
+                ) {
+                    // 如果只有一张图片
+                    let pic = postData.attachments[postData.attachments.length - 1]
+                    if(!pic.name?.toLowerCase().endsWith(".png")) {
+                        // 筛选图片类型
+                        return
+                    }
+                    let url = `${fileOriginUrl}/data${pic.path}`
+
+                    let fileSuffix = getFileSuffix(pic.name);
+                    let filename = `${name.trim()}.${fileSuffix}`
+
+                    urls += `${filename},${url}\n`
+                } else {
+                    // 用来保存下载地址，遍历是否有重复数据
+                    const set = new Set()
+
+                    for (let pic of postData.attachments) {
+                        if(!pic.name?.toLowerCase().endsWith(".png")) {
+                            // 筛选图片类型
+                            continue
+                        }
+                        if(set.has(pic.path)) {
+                            console.log("下载地址重复了，不做任何处理")
+                            continue
+                        }
+
+                        let twoDigitText = num.toString().padStart(2, '0');
+                        if(num == 0 && type == 'pic_withoutFirst') {
+                            console.log('跳过首张')
+                            num += 1;
+                            continue
+                        }
+                        num += 1;
+
+                        let url = `${fileOriginUrl}/data${pic.path}`
+
+                        let fileSuffix = getFileSuffix(pic.name);
+                        let filename = `${twoDigitText}.${fileSuffix}`
+                        if (mode == 'NoFolder') {
+                            filename = name.trim().concat(' ', twoDigitText, '.', fileSuffix)
+
+                            if (pic.name.length <= 10) {
+                                if (type == 'pic_origin') {
+                                    filename = `${pic.name}`
+                                } else {
+                                    filename = name.trim().concat(' ', twoDigitText, ' ', pic.name)
+                                }
+                            }
+                        }
+
+                        urls += `${filename},${url}\n`
+                        set.add(pic.path)
+                    }
+                    console.log(set)
+                }
+            }
+
+            if (urls) {
+                const clipboardObj = navigator.clipboard;
+                clipboardObj.writeText(urls)
+                Toast(`copyAll successfully copied!`)
+            } else {
+                Toast(`copyAll failed!`)
+            }
+        }
+    }
+
+    function downloadContent() {
+        let node = document.body.querySelector('.post__content');
+        if (node) {
+            let name = getPostname();
+            let text = node.innerText;
+            console.log(node.innerText)
+
+            saveAs(
+                new Blob([name + '\n\n' + text], {type: "text/plain;charset=UTF-8"}),
+                name + ".txt"
+            );
+
+        } else {
+            Toast(`copyContent failed!`)
+        }
+    }
+
+})();
+
