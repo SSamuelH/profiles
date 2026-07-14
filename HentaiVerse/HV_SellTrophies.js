@@ -19,17 +19,17 @@ el.onclick = async () => {
     let credit = 0;
     for (const [itemid, itemname, default_price] of [
         // Add/Remove the item ID and name of thophies you want to sell/not sell
-        [30016, 'ManBearPig Tail (T2)', 790],
-        [30017, 'Holy Hand Grenade of Antioch (T2)', 790],
-        [30018, 'Mithra\'s Flower (T2)', 790],
-        [30019, 'Dalek Voicebox (T2)', 790],
-        [30020, 'Lock of Blue Hair (T2)', 790],
-        [30021, 'Bunny-Girl Costume (T3)', 1490],
-        [30022, 'Hinamatsuri Doll (T3)', 1490],
-        [30023, 'Broken Glasses (T3)', 1490],
-        [30024, 'Black T-Shirt (T4)', 3480],
-        [30030, 'Sapling (T4)', 3480],
-        [30031, 'Unicorn Horn (T5)', 7500],
+        [30016, 'ManBearPig Tail (T2)', 890],
+        [30017, 'Holy Hand Grenade of Antioch (T2)', 890],
+        [30018, 'Mithra\'s Flower (T2)', 890],
+        [30019, 'Dalek Voicebox (T2)', 890],
+        [30020, 'Lock of Blue Hair (T2)', 890],
+        [30021, 'Bunny-Girl Costume (T3)', 1780],
+        [30022, 'Hinamatsuri Doll (T3)', 1780],
+        [30023, 'Broken Glasses (T3)', 1780],
+        // [30024, 'Black T-Shirt (T4)', 3600],
+        [30030, 'Sapling (T4)', 3600],
+        // [30031, 'Unicorn Horn (T5)', 7500],
         [30032, 'Noodly Appendage (T6)', 43800],
     ]) {
         el.innerText = `出售 ${itemname} (获取库存)`;
