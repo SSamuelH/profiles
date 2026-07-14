@@ -483,9 +483,9 @@ const source_name_match = /(\w*)_source/;
             btn.style.cssText = configBtnstyle;
 
             btn.textContent = buttonName;
-            // btn.addEventListener('click', (event) => {
-            //     funcs[configButGroup[buttonName].func](event);
-            // });
+            btn.addEventListener('click', (event) => {
+                funcs[configButGroup[buttonName].func](event);
+            });
 
             if (!btn.textContent) {
                 continue
