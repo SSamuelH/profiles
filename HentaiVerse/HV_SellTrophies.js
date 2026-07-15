@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         HentaiVerse sell T2-T6 trophies
 // @desc         一键售卖奖杯
-// @version      2026-01-08T02:17:34.965Z
+// @version      2026-7-15
 // @icon         https://hentaiverse.org/y/favicon.png
 // @supportURL   https://forums.e-hentai.org/index.php?showtopic=291628
 // @match        https://hentaiverse.org/?s=Bazaar&ss=mk&screen=browseitems&filter=tr
