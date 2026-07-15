@@ -37,7 +37,12 @@ el.onclick = async () => {
         const r = await fetch(url).then(r => r.text());
         const d = dp.parseFromString(r, 'text/html');
         const token = d.querySelector('#market_itemsell input[name="marketoken"]').value;
-        const count = parseInt(/你有 (\d+) 可以出售\./g.exec(d.getElementById('market_iteminfo').innerText)[1]);
+        console.log(d.getElementById('market_iteminfo').innerText)
+        let regExpExecArray = /You have (\d+) available to sell\./g.exec(d.getElementById('market_iteminfo').innerText);
+        if(!regExpExecArray) {
+            regExpExecArray = /库存 (\d+)\./g.exec(d.getElementById('market_iteminfo').innerText);
+        }
+        const count = parseInt(regExpExecArray[1]);
         const countCurrent = parseInt(d.getElementById('sellorder_batchcount').value);
         // 没有库存就跳过
         if (!count || count === countCurrent) continue;
