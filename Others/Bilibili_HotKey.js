@@ -35,7 +35,7 @@
         const isPageFocused = document.hasFocus(); // 当前页面是否获得焦点 ✅
 
         // ✅ 新增：判断当前是否在输入框内（输入框按键不触发）
-        const isInputing = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName);
+        const isInputing = ['INPUT', 'TEXTAREA', 'SELECT', 'BILI-COMMENTS'].includes(document.activeElement.tagName);
         const isEditable = document.activeElement.isContentEditable; // 富文本编辑器
 
         // 满足条件：按键 + 页面聚焦
