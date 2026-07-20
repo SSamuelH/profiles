@@ -87,17 +87,25 @@
                     if(tr.childNodes[0].innerText == 'Type') {
                         type = tr.childNodes[1]
                     }
+                    if(tr.parentNode.childNodes[0].innerText == 'Type') {
+                        console.log(tr)
+                        type = tr
+                    }
                     if(tr.childNodes[0].innerText == 'AIR') {
                         console.log(tr)
                         console.log(tr.childNodes[0].innerText)
                         console.log(tr.childNodes[1].innerText)
+                        console.log(tr.parentNode.childNodes[1].innerText)
                         if(!air && tr.childNodes[1]) {
                             air = tr.childNodes[1]
                         }
+                        if(!air?.innerText && tr.parentNode.childNodes[1]) {
+                            air = tr.parentNode.childNodes[1]
+                        }
                     }
                 }
-                console.log(type.innerText)
-                console.log(air.innerText)
+                console.log(type?.innerText)
+                console.log(air?.innerText)
 
                 if(type && air) {
                     let modelVersion = undefined;
@@ -118,9 +126,6 @@
                             }
                         }
                     }
-
-                    console.log(type.innerText)
-                    console.log(air.innerText)
 
                     let filename = transfer(`[${type.innerText}] ${name} ${modelVersion?"- " + modelVersion + " ":""}(${air.innerText})`)
                         .replaceAll('：', '')
