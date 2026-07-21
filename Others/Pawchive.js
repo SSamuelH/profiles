@@ -978,6 +978,7 @@ const source_name_match = /(\w*)_source/;
                 let num = 1
 
                 if (attachments.length == 1) {
+                    console.log("01")
                     let attach = attachments[0]
 
                     let url = postAttachs ? `${fileOriginUrl}/data${attach.path}` : `${fileOriginUrl}/data${attach.path}`
@@ -990,14 +991,16 @@ const source_name_match = /(\w*)_source/;
 
                     // 如果匹配格式的话，就不带原始文件名
                     if(originName.match(source_name_match)) {
-
+                        console.log("01.01")
                     } else if (attach.name.length <= 50 && attach.name.length != (36 + 4)) {
+                        console.log("01.02")
                         // 如果原始文件名很短
                         filename = `${name.trim()} ${attach.name}`
                     }
 
                     urls += `${filename},${url}\n`
                 } else {
+                    console.log("02")
                     // 用来保存下载地址，遍历是否有重复数据
                     const set = new Set()
 
@@ -1013,24 +1016,31 @@ const source_name_match = /(\w*)_source/;
                         if (attach.extension === ".mp4" || attach.extension === ".m4v" || attach.extension === ".mov" || attach.extension === ".webm"
                             || attach.extension === ".rar" || attach.extension === ".zip" || attach.extension === ".bin" || attach.extension === ".pdf"
                         ) {
+                            console.log("02.01")
 
                             let twoDigitText = num.toString().padStart(2, '0');
                             filename = name.trim().concat(' ', twoDigitText, attach.extension)
 
                             if (type != 'attachment_serial' && attach.name.length <= 50) {
                                 if (type == 'attachment_origin') {
+                                    console.log("02.01.01")
                                     filename = `${attach.name}`
                                 } else {
+                                    console.log("02.01.02")
                                     let originName = getFilePrefix(attach.name)
                                     // 如果匹配格式的话，就不带原始文件名
-                                    if(originName.match(source_name_match)) {;
+                                    if(originName.match(source_name_match)) {
+                                        console.log("02.01.02.01")
                                         filename = name.trim().concat(' ', twoDigitText, attach.extension)
                                         if (mode != 'NoFolder') {
+                                            console.log("02.01.02.02")
                                             filename = twoDigitText + attach.extension
                                         }
                                     } else {
+                                        console.log("02.01.02.03")
                                         filename = name.trim().concat(' ', twoDigitText, ' ', attach.name)
                                         if(type == 'attachment') {
+                                            console.log("02.01.02.04")
                                             filename = name.trim().concat(' ', attach.name)
                                         }
                                     }
@@ -1039,6 +1049,7 @@ const source_name_match = /(\w*)_source/;
 
                             num += 1
                         } else {
+                            console.log("02.02")
                             filename = name.trim().concat(' ', attach.name)
                             if (type != 'attachment_serial' && attach.name.length <= 50) {
                                 filename = `${attach.name}`
@@ -1055,12 +1066,14 @@ const source_name_match = /(\w*)_source/;
 
             // 处理图片
             if ((type == 'all' || type == 'pic' || type == 'pic_withoutFirst') && postData.attachments && postData.attachments.length > 0) {
+                console.log("03")
                 urls += ""
                 let num = 1
 
                 if (postData.attachments.length == 1 ||
                     (postData.attachments.length == 2 && type == 'pic_withoutFirst')
                 ) {
+                    console.log("03.01")
                     // 如果只有一张图片
                     let pic = postData.attachments[postData.attachments.length - 1]
                     if(!pic.name?.toLowerCase().endsWith(".png")) {
@@ -1074,14 +1087,15 @@ const source_name_match = /(\w*)_source/;
 
                     urls += `${filename},${url}\n`
                 } else {
+                    console.log("03.02")
                     // 用来保存下载地址，遍历是否有重复数据
                     const set = new Set()
 
                     for (let pic of postData.attachments) {
-                        if(!pic.name?.toLowerCase().endsWith(".png")) {
-                            // 筛选图片类型
-                            continue
-                        }
+                        // if(!pic.name?.toLowerCase().endsWith(".png")) {
+                        //     // 筛选图片类型
+                        //     continue
+                        // }
                         if(set.has(pic.path)) {
                             console.log("下载地址重复了，不做任何处理")
                             continue
@@ -1100,12 +1114,15 @@ const source_name_match = /(\w*)_source/;
                         let fileSuffix = getFileSuffix(pic.name);
                         let filename = `${twoDigitText}.${fileSuffix}`
                         if (mode == 'NoFolder') {
+                            console.log("03.02")
                             filename = name.trim().concat(' ', twoDigitText, '.', fileSuffix)
 
                             if (pic.name.length <= 10) {
                                 if (type == 'pic_origin') {
+                                    console.log("03.02.01")
                                     filename = `${pic.name}`
                                 } else {
+                                    console.log("03.02.02")
                                     filename = name.trim().concat(' ', twoDigitText, ' ', pic.name)
                                 }
                             }
