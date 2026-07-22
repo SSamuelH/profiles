@@ -21,6 +21,8 @@
 const btnSwitchName = "btnSwitch"
 const btnSizeName = "btnSize"
 
+const downloadPath = "F:\\Downloads\\Default\\Other\\Kemono\\"
+
 const web_prefix = "pwc"
 const fileOriginUrl = "https://file.pawchive.pw"
 
@@ -956,7 +958,7 @@ const source_name_match = /(\w*)_source/;
 
             // 如果不是非文件夹模式，就按文件夹下载
             if (mode != 'NoFolder') {
-                urls += `#O,F:\\Downloads\\Default\\Other\\Kemono\\${name.trim()}\n`
+                urls += `#O,${downloadPath}${name.trim()}\n`
             }
 
             let isPic = false
