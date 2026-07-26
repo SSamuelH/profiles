@@ -36,6 +36,7 @@ const buttonGroup = {
     // "复制附件（原名）": {"name": "copyAttachments_origin", "func": "copyAttachments_origin", "color": "blue"},
     "复制附件（序号）": {"name": "copyAttachments_serial", "func": "copyAttachments_serial", "color": "blue", "hotkey": "R"},
     "复制附件（文件夹）": {"name": "copyAttachments_folder", "func": "copyAttachments_folder", "color": "blue", "hotkey": "T"},
+    "复制附件（夹+序号）": {"name": "copyAttachments_folder_serial", "func": "copyAttachments_folder_serial", "color": "blue", "hotkey": "T"},
     "复制所有": {"name": "copyAll", "func": "copyAll", "hotkey": "A"},
     "复制所有（文件夹）": {"name": "copyAll_folder", "func": "copyAll_folder", "hotkey": "S"},
     "下载文本内容": {"name": "downloadContent", "func": "downloadContent", "color": "yellow"},
@@ -341,6 +342,9 @@ const source_name_match = /(\w*)_source/;
         },
         copyAttachments_folder() {
             copyAll('', 'attachment');
+        },
+        copyAttachments_folder_serial() {
+            copyAll('', 'attachment_serial');
         },
         copyAll() {
             copyAll('NoFolder', 'all');
@@ -944,7 +948,7 @@ const source_name_match = /(\w*)_source/;
     }
 
     function copyAll(mode, type) {
-        console.log("copyAll")
+        console.log("copyAll ", mode, ' ', type)
         let profileData = getUserData()
         let postData = postApi();
         console.log(postData);
@@ -968,7 +972,7 @@ const source_name_match = /(\w*)_source/;
 
             // 添加封面
             if(postData.file && postData.file.name?.toLowerCase().startsWith("cover")) {
-                urls += `${isPic?'00_':''}${postData.file.name},${fileOriginUrl}/data${postData.file.path}\n`
+                urls += `${(mode == 'NoFolder')?name+' ':''}${isPic?'00_':''}${postData.file.name},${fileOriginUrl}/data${postData.file.path}\n`
             }
 
             // 处理附件 视频/ZIP
@@ -1014,14 +1018,22 @@ const source_name_match = /(\w*)_source/;
 
                         let filename = ''
                         let url = postAttachs ? `${fileOriginUrl}/data${attach.path}` : `${fileOriginUrl}/data${attach.path}`
+                        if(!attach.extension) {
+                            attach.extension = "." + getFileSuffix(attach.name);
+                        }
 
                         if (attach.extension === ".mp4" || attach.extension === ".m4v" || attach.extension === ".mov" || attach.extension === ".webm"
                             || attach.extension === ".rar" || attach.extension === ".zip" || attach.extension === ".bin" || attach.extension === ".pdf"
+                            || attach.extension === ".png"
                         ) {
                             console.log("02.01")
 
                             let twoDigitText = num.toString().padStart(2, '0');
-                            filename = name.trim().concat(' ', twoDigitText, attach.extension)
+                            if(mode == 'NoFolder') {
+                                filename = name.trim().concat(' ', twoDigitText, attach.extension)
+                            } else {
+                                filename = "".concat(twoDigitText, attach.extension)
+                            }
 
                             if (type != 'attachment_serial' && attach.name.length <= 50) {
                                 if (type == 'attachment_origin') {
@@ -1043,7 +1055,11 @@ const source_name_match = /(\w*)_source/;
                                         filename = name.trim().concat(' ', twoDigitText, ' ', attach.name)
                                         if(type == 'attachment') {
                                             console.log("02.01.02.04")
-                                            filename = name.trim().concat(' ', attach.name)
+                                            if(mode == 'NoFolder') {
+                                                filename = name.trim().concat(' ', attach.name)
+                                            } else {
+                                                filename = attach.name
+                                            }
                                         }
                                     }
                                 }
