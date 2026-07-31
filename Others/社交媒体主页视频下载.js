@@ -522,9 +522,21 @@ unsafeWindow._downloader = _downloader = {
                         let note = json[item.id].note
                         Object.assign(item, {create_time: note.time, meta: note})
                         console.log(note)
-                        reslove(note.type == 'video' ? {url: note.video.media.stream.h265[0].masterUrl, type: 'video'} : note.imageList.map(({urlDefault}) => {
-                            return {url: urlDefault, type: 'photo'}
-                        }))
+                        if(!note.video) {
+                            reslove(note.imageList.map(({urlDefault}) => {
+                                return {url: urlDefault, type: 'photo'}
+                            }))
+                        }
+                        if(note.video?.media.stream.h265) {
+                            reslove(note.type == 'video' ? {url: note.video.media.stream.h265[0].masterUrl, type: 'video'} : note.imageList.map(({urlDefault}) => {
+                                return {url: urlDefault, type: 'photo'}
+                            }))
+                        }
+                        if(note.video?.media.stream.EF5) {
+                            reslove(note.type == 'video' ? {url: note.video.media.stream.EF5[0].masterUrl, type: 'video'} : note.imageList.map(({urlDefault}) => {
+                                return {url: urlDefault, type: 'photo'}
+                            }))
+                        }
                     })
                 }),
                 rules: [
