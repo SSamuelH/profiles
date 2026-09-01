@@ -826,6 +826,10 @@ const source_name_match = /(\w*)_source/;
         if(!username) {
             username = document.querySelector("meta[name=\"artist_name\"]")?.content;
         }
+        if(!username) {
+            Toast(" 获取用户名称失败！ 01")
+            return
+        }
 
         // 判断是否已有作者id
         const key = `${web_prefix}_user_${platform}_${userId}`
@@ -838,6 +842,10 @@ const source_name_match = /(\w*)_source/;
                 platform: platform,
             }
             localStorage.setItem(key, JSON.stringify(profileData));
+        }
+        if(!profileData.name) {
+            Toast(" 获取用户名称失败！ 02")
+            return
         }
         return profileData;
     }
@@ -975,11 +983,12 @@ const source_name_match = /(\w*)_source/;
                 urls += `${(mode == 'NoFolder')?name+' ':''}${isPic?'00_':''}${postData.file.name},${fileOriginUrl}/data${postData.file.path}\n`
             }
 
+            let attachments = [].concat(postData.attachments)
+            let postAttachs = attachments.length > 0 ? false : true
+
             // 处理附件 视频/ZIP
             if ((type == 'all' || type == 'attachment' || type == 'attachment_origin' || type == 'attachment_serial')
-                && ((postData.attachments && postData.attachments.length > 0) || (postData.attachments && postData.attachments.length > 0))) {
-                let attachments = postData.attachments.length > 0 ? postData.attachments : postData.attachments
-                let postAttachs = postData.attachments.length > 0 ? false : true
+                && ((attachments && attachments.length > 0) || (attachments && attachments.length > 0))) {
 
                 let num = 1
 
@@ -1082,22 +1091,30 @@ const source_name_match = /(\w*)_source/;
                 console.log("not found attachments")
             }
 
+            // console.log(attachments)
+            if(attachments.length == 0) {
+                attachments.push(postData.file)
+                postAttachs = attachments > 0 ? false : true
+
+                console.log(attachments)
+            }
+
             // 处理图片
-            if ((type == 'all' || type == 'pic' || type == 'pic_withoutFirst') && postData.attachments && postData.attachments.length > 0) {
+            if ((type == 'all' || type == 'pic' || type == 'pic_withoutFirst') && attachments && attachments.length > 0) {
                 console.log("03")
                 urls += ""
                 let num = 1
 
-                if (postData.attachments.length == 1 ||
-                    (postData.attachments.length == 2 && type == 'pic_withoutFirst')
+                if (attachments.length == 1 ||
+                    (attachments.length == 2 && type == 'pic_withoutFirst')
                 ) {
                     console.log("03.01")
                     // 如果只有一张图片
-                    let pic = postData.attachments[postData.attachments.length - 1]
-                    if(!pic.name?.toLowerCase().endsWith(".png")) {
+                    let pic = attachments[attachments.length - 1]
+/*                    if(!pic.name?.toLowerCase().endsWith(".png")) {
                         // 筛选图片类型
                         return
-                    }
+                    }*/
                     let url = `${fileOriginUrl}/data${pic.path}`
 
                     let fileSuffix = getFileSuffix(pic.name);
@@ -1109,7 +1126,7 @@ const source_name_match = /(\w*)_source/;
                     // 用来保存下载地址，遍历是否有重复数据
                     const set = new Set()
 
-                    for (let pic of postData.attachments) {
+                    for (let pic of attachments) {
                         // if(!pic.name?.toLowerCase().endsWith(".png")) {
                         //     // 筛选图片类型
                         //     continue
