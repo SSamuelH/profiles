@@ -19,18 +19,18 @@ el.onclick = async () => {
     let credit = 0;
     for (const [itemid, itemname, default_price] of [
         // Add/Remove the item ID and name of thophies you want to sell/not sell
-        [30016, 'ManBearPig Tail (T2)', 890],
-        [30017, 'Holy Hand Grenade of Antioch (T2)', 890],
-        [30018, 'Mithra\'s Flower (T2)', 890],
-        [30019, 'Dalek Voicebox (T2)', 890],
-        [30020, 'Lock of Blue Hair (T2)', 890],
-        [30021, 'Bunny-Girl Costume (T3)', 1780],
-        [30022, 'Hinamatsuri Doll (T3)', 1780],
-        [30023, 'Broken Glasses (T3)', 1780],
+        [30016, 'ManBearPig Tail (T2)', 680],
+        [30017, 'Holy Hand Grenade of Antioch (T2)', 680],
+        [30018, 'Mithra\'s Flower (T2)', 680],
+        [30019, 'Dalek Voicebox (T2)', 680],
+        [30020, 'Lock of Blue Hair (T2)', 680],
+        [30021, 'Bunny-Girl Costume (T3)', 1250],
+        [30022, 'Hinamatsuri Doll (T3)', 1250],
+        [30023, 'Broken Glasses (T3)', 1250],
         // [30024, 'Black T-Shirt (T4)', 3600],
-        [30030, 'Sapling (T4)', 3600],
+        [30030, 'Sapling (T4)', 3200],
         // [30031, 'Unicorn Horn (T5)', 7500],
-        [30032, 'Noodly Appendage (T6)', 43800],
+        [30032, 'Noodly Appendage (T6)', 34600],
     ]) {
         el.innerText = `出售 ${itemname} (获取库存)`;
         const url = `https://hentaiverse.org/?s=Bazaar&ss=mk&screen=browseitems&filter=tr&itemid=${itemid}`;
