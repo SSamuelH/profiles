@@ -37,16 +37,16 @@ function IDMToAria2(idm) {
     console.log(arr);
 
     let referer = ""
-    let dir;
+    let dir = downloadPath?downloadPath:undefined;
 
     for(let line of arr) {
         if(line.startsWith('#R,')) {
             referer = line.replace('#R,', '')
-            dir = undefined
+            dir = downloadPath
         } else if(line.startsWith('#O,,')) {
             dir = line.replace('#O,', '')
-        } else {
-            let _arr = line.split(/,/);
+        } else if(line.trim() != "") {
+            let _arr = line.split(/\,/);
             let url;
             let name;
 
@@ -57,13 +57,17 @@ function IDMToAria2(idm) {
                 url = _arr[0]
             }
 
-            params = [
+            let params = [
                 `token:${RPC_SECRET}`,
-                [url],
+                [url.trim()],
                 {
                     dir: dir,
                     out: name,
-                    referer: referer
+                    referer: referer,
+                    header:[
+                        `Referer: ${referer}`,
+                        'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36',
+                    ]
                 }
             ]
 
@@ -74,12 +78,14 @@ function IDMToAria2(idm) {
 
 function RPC(json, params) {
     json.params = params
+    console.log(json)
+    console.log(JSON.stringify(json))
 
     GM_xmlhttpRequest({
         method: "POST",
         url: RPC_URL,
         headers: {
-            "Content‑Type": "application/json"
+            // "Content‑Type": "application/json;charset=utf-8"
         },
         data: JSON.stringify(json),
         onload: (resp) => {
