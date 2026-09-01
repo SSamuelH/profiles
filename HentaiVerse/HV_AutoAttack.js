@@ -2806,7 +2806,7 @@ try {
         } else if (!last) {
             cd = 0;
         } else {
-            cd = _1h / 2 + last - now;
+            cd = _1h / 2 + last - now + 15 * _1s;
         }
         cd = Math.max(0, cd);
         const ui = gE('#encounterUI') ?? (() => {
@@ -4758,12 +4758,16 @@ try {
                 point = reg[2] * 1;
                 // todo
                 // console.log("parm.log[i - 1].textContent")
-                // console.log(parm.log[i - 1].textContent)
-                magic = parm.log[i - 1].textContent.match(/(You|you|and) (for|take) (\d+) (\w+) damage/)[4].replace('ing', '');
-                stats.hurt[magic] = (magic in stats.hurt) ? stats.hurt[magic] + point : point;
-                point = reg[3] * 1;
-                magic = `${reg[1].replace('Your ', '')}_${reg[4]}`;
-                stats.hurt[magic] = (magic in stats.hurt) ? stats.hurt[magic] + point : point;
+                console.log(parm.log[i - 1].textContent)
+                if(parm.log[i - 1].textContent.match(/(You|you|and) (for|take) (\d+) (\w+) damage/)) {
+                    magic = parm.log[i - 1].textContent.match(/(You|you|and) (for|take) (\d+) (\w+) damage/)[4].replace('ing', '');
+                    stats.hurt[magic] = (magic in stats.hurt) ? stats.hurt[magic] + point : point;
+                    point = reg[3] * 1;
+                    magic = `${reg[1].replace('Your ', '')}_${reg[4]}`;
+                    stats.hurt[magic] = (magic in stats.hurt) ? stats.hurt[magic] + point : point;
+                } else {
+                    console.log("not match")
+                }
             } else if (text.match(/You gain .* proficiency/)) {
                 reg = text.match(/You gain ([\d.]+) points of (.*?) proficiency/);
                 magic = reg[2];
