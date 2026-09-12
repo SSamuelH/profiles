@@ -218,6 +218,9 @@ const settings = {
         "Power Level Calculator": "战力计算器",
         "Manage Database": "管理数据库",
         "Search Mail": "搜索邮件",
+        "Inbox": "收件箱",
+        "Attachment": "附件",
+
         "GO": "前往",
         "Prev": "上一页",
         "Next": "下一页",
