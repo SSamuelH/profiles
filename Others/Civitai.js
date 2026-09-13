@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         Sam Civitai
+// @name         Sam Civitai Test
 // @namespace    http://tampermonkey.net/
 // @version      V1.0
 // @description
@@ -40,9 +40,19 @@
     const observer = new MutationObserver(callback);
     observer.observe(targetNode, config);
 
-    const init = () => timer(100, check)
+    const init = () => timer(500, check)
 
     const check = function () {
+        // 看看有没有标题栏
+        let title_column = getTitle()
+        if (title_column) {
+            copy()
+        } else {
+            init()
+        }
+    }
+
+    const getTitle = () => {
         // 看看有没有标题栏
         let title_column = document.querySelector('.mantine-yoffm');
         if(!title_column) {
@@ -50,11 +60,11 @@
         }
         if (title_column) {
             let title = title_column.querySelector('.mantine-Title-root');
-            console.log(title.innerText);
-            copy()
+            // console.log(title.innerText);
+            return title
         } else {
             console.log('not found');
-            init()
+            return
         }
     }
 
@@ -62,52 +72,30 @@
     init()
 
     const copy = function () {
-        let title_column = document.querySelector('.mantine-Stack-root');
-        if(!title_column) {
-            title_column = document.querySelector('.mantine-yoffm');
-        }
-        let title = title_column.querySelector('.mantine-Title-root');
+        let title = getTitle()
         let name = title.innerText.trim()
+        let json = {}
 
         // 如果是模型的话
         let matchArray = window.location.href.match(/models\/(\d*)(\/.+)?(.*)?$/);
-        console.log("matchArray:", matchArray);
+        // console.log("matchArray:", matchArray);
         if(matchArray) {
             let modelId = matchArray[1];
 
-            let Accordions = document.querySelectorAll('.mantine-Accordion-content');
+            let Accordions = document.querySelectorAll('.mantine-Accordion-root');
 
             for (const Accordion of Accordions) {
-                let trs = Accordion.querySelectorAll('.mantine-Table-tr');
-                let groups = Accordion.querySelectorAll('.mantine-Group-root');
+                // let groups = Accordion.querySelectorAll('.mantine-Group-root');
+                let groupName = Accordion.querySelector('.mantine-Group-root');
+                console.log("groupName : ", groupName.innerText)
 
-                let type;
-                let air;
-                for (let tr of groups) {
-                    if(tr.childNodes[0].innerText == 'Type') {
-                        type = tr.childNodes[1]
-                    }
-                    if(tr.parentNode.childNodes[0].innerText == 'Type') {
-                        console.log(tr)
-                        type = tr
-                    }
-                    if(tr.childNodes[0].innerText == 'AIR') {
-                        console.log(tr)
-                        console.log(tr.childNodes[0].innerText)
-                        console.log(tr.childNodes[1].innerText)
-                        console.log(tr.parentNode.childNodes[1].innerText)
-                        if(!air && tr.childNodes[1]) {
-                            air = tr.childNodes[1]
-                        }
-                        if(!air?.innerText && tr.parentNode.childNodes[1]) {
-                            air = tr.parentNode.childNodes[1]
-                        }
-                    }
-                }
-                console.log(type?.innerText)
-                console.log(air?.innerText)
+                let detailRows = Accordion.querySelectorAll('[class$="detailRow"]');
+                groupsToJSON(json, detailRows)
+                let detailRowTops = Accordion.querySelectorAll('[class$="detailRowTop"]');
+                groupsToJSON(json, detailRowTops)
 
-                if(type && air) {
+                console.log(json)
+                if(json['Type'] && json['AIR']) {
                     let modelVersion = undefined;
 
                     let area = document.querySelector('.mantine-ScrollArea-root');
@@ -119,7 +107,7 @@
                             if(button) {
                                 let button_hover = button?.style.getPropertyValue('--button-hover') || 'none';
                                 if(button_hover == 'var(--mantine-color-blue-filled-hover)') {
-                                    console.log(button.innerText, " true")
+                                    // console.log(button.innerText, " true")
                                     modelVersion = button.innerText;
                                     break;
                                 }
@@ -127,7 +115,7 @@
                         }
                     }
 
-                    let filename = transfer(`[${type.innerText}] ${name} ${modelVersion?"- " + modelVersion + " ":""}(${air.innerText})`)
+                    let filename = transfer(`[${json['Type']}丨${json['Base Model']}] ${name} ${modelVersion?"(" + modelVersion + ")":""}(${json['AIR']})`)
                         .replaceAll('：', '')
                         .replaceAll(',', ' ')
                         .replaceAll('、', ' ')
@@ -135,8 +123,6 @@
                     console.log(filename)
 
                     let button = createButton(filename);
-                    // insertButtonAfter(title.parentNode.lastChild, button)
-                    console.log(button)
                     console.log("标题后插入按钮")
                     insertButtonAfter(title, button)
 
@@ -144,30 +130,11 @@
                 }
             }
         }
+    }
 
-        // 如果是图片的话
-        matchArray = window.location.href.match(/images\/(\d*)?$/);
-        if(matchArray) {
-            console.log(matchArray);
-            let modelId = matchArray[1];
-
-            let gap = document.querySelectorAll('.gap-1');
-
-            for (const Accordion of Accordions) {
-                let type = Accordion.querySelector('.mantine-1cvam8p');
-                if(!type) continue
-                let air = Accordion.querySelector('.mantine-z88oh');
-                console.log(type.innerText)
-                console.log(air.innerText)
-
-                let filename = transfer(`[${type.innerText}] ${name} (${air.innerText})`)
-                console.log(filename)
-
-                let button = createButton(filename);
-                insertButtonAfter(title, button)
-
-                break
-            }
+    const groupsToJSON = (json, groups) => {
+        for (let group of groups) {
+            json[group.childNodes[0].innerText] = group.childNodes[1].innerText
         }
     }
 
@@ -179,7 +146,6 @@
         div.classList.add('mantine-Badge-root');
         div.classList.add('m_347db0ec');
 
-        // let button = document.createElement('button');
         let buttonName = "copyName"
         div.id = "copy_" + buttonName
         div.classList.add(buttonName);
