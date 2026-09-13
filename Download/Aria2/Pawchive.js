@@ -25,7 +25,7 @@
 const btnSwitchName = "btnSwitch"
 const btnSizeName = "btnSize"
 
-const downloadPath = "F:\\Downloads\\Default\\Other\\Kemono\\"
+const downloadPath = "E:\\Downloads\\Default\\Other\\Kemono\\"
 
 const web_prefix = "pwc"
 const fileOriginUrl = "https://file.pawchive.pw"
