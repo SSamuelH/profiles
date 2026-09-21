@@ -119,6 +119,9 @@
                         .replaceAll('：', '')
                         .replaceAll(',', ' ')
                         .replaceAll('、', ' ')
+                        .replaceAll('\\', '＼')
+                        .replaceAll('\/', '／')
+                        .replaceAll('\|', '｜')
 
                     console.log(filename)
 
