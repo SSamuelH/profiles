@@ -27,16 +27,18 @@ function transfer(text) {
 }
 
 //提示信息 封装
-function Toast(msg, duration, movedown) {
+function Toast(msg, duration, movedown, fontsize) {
     duration = isNaN(duration) ? 1000 : duration;
     movedown = isNaN(movedown) ? 0 : movedown;
+    fontsize = isNaN(movedown) ? 15 : fontsize;
+
     let top = '20%';
     if(movedown > 0) {
         top = (window.innerHeight + movedown) + 'px';
     }
     var m = document.createElement('div');
     m.innerHTML = msg;
-    m.style.cssText = "font-size: 15px;" +
+    m.style.cssText = `font-size: ${fontsize}px;` +
         "color: rgb(255, 255, 255);" +
         "text-shadow: 0 0 10px rgba(0, 255, 255, 0.7)," +
         "0 0 20px rgba(0, 255, 255, 0.7)," +
