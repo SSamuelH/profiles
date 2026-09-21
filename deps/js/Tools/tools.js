@@ -27,10 +27,10 @@ function transfer(text) {
 }
 
 //提示信息 封装
-function Toast(msg, duration, movedown, fontsize) {
+function Toast(msg, duration, movedown, fontsize, addStyle) {
     duration = isNaN(duration) ? 1000 : duration;
     movedown = isNaN(movedown) ? 0 : movedown;
-    fontsize = isNaN(movedown) ? 15 : fontsize;
+    fontsize = isNaN(fontsize) ? 15 : fontsize;
 
     let top = '20%';
     if(movedown > 0) {
@@ -53,6 +53,10 @@ function Toast(msg, duration, movedown, fontsize) {
         "width: auto;" +
         "z-index:1001;" +
         "text-align: center;";
+    if(addStyle) {
+        m.style.cssText += addStyle;
+    }
+
     document.body.appendChild(m);
     setTimeout(function () {
         var d = 1;
