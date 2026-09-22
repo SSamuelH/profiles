@@ -27502,13 +27502,36 @@ Each site adapter provides as many of these variables as possible; the site-spec
                             pIndex: 0,
                         });
                     }
-                    // 文件列表
+
+                    let countMap = {}
                     for (const file of data17.post.attachments) {
+                        const postfix = file.path?.substring(file.path?.lastIndexOf(".") + 1)
+                        let count = countMap[postfix] ? countMap[postfix] : 0
+                        count += 1
+                        countMap[postfix] = count
+                    }
+
+                    console.log(countMap)
+
+                    // 文件列表
+                    let index = 0;
+                    for (const file of data17.post.attachments) {
+                        const postfix = file.path?.substring(file.path?.lastIndexOf(".") + 1)
+
+                        const isZIP = postfix.endsWith("zip")
+                        let pIndex = ""
+                        // 不是压缩文件 且 同格式不是只有一个文件
+                        if(!isZIP && countMap[postfix] !== 1) {
+                            index += 1;
+                            pIndex = index;
+                        }
+
                         files.push({
                             kind: "download",
                             name: file.name ?? file.path.substring(file.path.lastIndexOf("/") + 1),
                             path: file.path,
-                            url: family.assets.fullFile(file, data17)
+                            url: family.assets.fullFile(file, data17),
+                            pIndex : pIndex
                         });
                     }
                 }
@@ -27522,7 +27545,8 @@ Each site adapter provides as many of these variables as possible; the site-spec
                         kind: "save",
                         name: textContent === "txt" ? "content.txt" : "content.html",
                         path: "__internal_content__",
-                        data: content
+                        data: content,
+                        pIndex: "",
                     });
                 }
                 resource.files = files;
@@ -27689,9 +27713,8 @@ Each site adapter provides as many of these variables as possible; the site-spec
                         this.name = this.resource.name ?? null;
                         const metaChain = this.metaChain();
                         this.resource.files?.forEach((file, i2) => {
-                            const p = (file.kind == 'save' && file.name == "content.txt") ?
-                                '' : !storage$8.get("noCoverFile") ? 
-                                    i2 : i2 + 1;
+                            const p = file.pIndex;
+                            // buildDownloadTarget(file, metaChain, p, this.options.template)
                             this.subTasks.push(this.options.fileTaskFactory(this, buildDownloadTarget(file, metaChain, p, this.options.template)));
                         });
                         this.resource.children?.forEach((child) => {
