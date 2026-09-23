@@ -356,7 +356,7 @@ jQuery(function ($) {
             alert(e);
         }
 
-        getWork(id) {
+        getWork(id, onlyContent) {
             return request({
                 url: `/ajax/novel/${id}`,
                 responseType: "json",
@@ -364,48 +364,52 @@ jQuery(function ($) {
                 let title = [];
                 let output = [];
 
-                title.push(`[${body.userName}]`);
-                title.push(`[${body.title}]`);
-                title.push(`[${website}]`);
-                title.push(`[${body.id}]`);
-                if (body.xRestrict === 1) {
-                    title.push("[R18]");
-                } else if (body.xRestrict === 2) {
-                    title.push("[R18G]");
-                }
+                if (!onlyContent) {
+                    title.push(`[${body.userName}]`);
+                    title.push(`[${body.title}]`);
+                    title.push(`[${website}]`);
+                    title.push(`[${body.id}]`);
+                    if (body.xRestrict === 1) {
+                        title.push("[R18]");
+                    } else if (body.xRestrict === 2) {
+                        title.push("[R18G]");
+                    }
 
-                title.push(`[${body.content.length}${i18n("txt_words2")}]`);
-                if (this.includeLikes) {
-                    title.push(`[${body.likeCount}${i18n("txt_likes2")}]`);
-                }
+                    title.push(`[${body.content.length}${i18n("txt_words2")}]`);
+                    if (this.includeLikes) {
+                        title.push(`[${body.likeCount}${i18n("txt_likes2")}]`);
+                    }
 
-                output.push(i18n("txt_title") + body.title);
-                output.push(i18n("txt_novelid") + body.id);
-                output.push(i18n("txt_author") + body.userName);
-                output.push(i18n("txt_authorid") + body.userId);
-                output.push(i18n("txt_words") + body.content.length);
-                output.push(i18n("txt_likes") + body.likeCount);
-                output.push(i18n("txt_createtime") + body.createDate);
-                output.push(i18n("txt_updatetime") + body.uploadDate);
-                output.push(
-                    i18n("txt_tags") +
-                    body.tags.tags
-                        .map(function (tag) {
-                            if (tag.userId === body.userId) {
-                                return "#" + tag.tag;
-                            }
-                            return "(#" + tag.tag + ")";
-                        })
-                        .join(" ")
-                );
-                output.push("");
-                output.push("");
-                output.push(i18n("txt_desc"));
-                output.push(body.description.replace(/<br \/>/gi, "\n"));
-                output.push("");
-                output.push("");
-                output.push("");
-                output.push("");
+                    output.push(i18n("txt_title") + body.title);
+                    output.push(i18n("txt_novelid") + body.id);
+                    output.push(i18n("txt_author") + body.userName);
+                    output.push(i18n("txt_authorid") + body.userId);
+                    output.push(i18n("txt_words") + body.content.length);
+                    output.push(i18n("txt_likes") + body.likeCount);
+                    output.push(i18n("txt_createtime") + body.createDate);
+                    output.push(i18n("txt_updatetime") + body.uploadDate);
+                    output.push(
+                        i18n("txt_tags") +
+                        body.tags.tags
+                            .map(function (tag) {
+                                if (tag.userId === body.userId) {
+                                    return "#" + tag.tag;
+                                }
+                                return "(#" + tag.tag + ")";
+                            })
+                            .join(" ")
+                    );
+                    output.push("");
+                    output.push("");
+                    output.push(i18n("txt_desc"));
+                    output.push(body.description.replace(/<br \/>/gi, "\n"));
+                    output.push("");
+                    output.push("");
+                    output.push("");
+                    output.push("");
+                } else {
+                    output.push(body.title);
+                }
 
                 let pageCount = 1;
                 output.push(
@@ -418,6 +422,10 @@ jQuery(function ($) {
                             return `\n\n[${i18n("txt_pageno", ++pageCount)}]\n\n`;
                         })
                 );
+
+                if(onlyContent) {
+                    output.push("\n\n");
+                }
 
                 const filename = filterFilename(title.join("")) + ".txt";
                 const content = output.join("\n");
@@ -831,13 +839,13 @@ jQuery(function ($) {
 
     class TaskSeries extends TaskMultiPage {
         defaultParams = {
-            limit: 30,
+            limit: 10,
             last_order: 0,
             order_by: "asc",
             lang: "zh",
         };
         id = "";
-        limit = 30;
+        limit = 10;
         title = "";
         userName = "";
         total = 0;
@@ -968,18 +976,52 @@ jQuery(function ($) {
         }
     }
 
+    // TODO 系列合并下载
     class TaskSeriesCombine extends TaskSeries {
+        defaultParams = {
+            limit: 30,
+            last_order: 0,
+            order_by: "asc",
+            lang: "zh",
+        };
+        id = "";
+        limit = 30;
+        title = "";
+        userName = "";
+        total = 0;
+
+        url = null;
+        params = null;
+        promise = null;
+        ids = null;
+        entries = null;
+
+        getInitData() {
+            return request({
+                url: "/ajax/novel/series/" + this.id,
+                method: "get",
+                data: {
+                    lang: "zh",
+                },
+            }).then((payload) => {
+                console.log(payload)
+                const {title, userName, displaySeriesContentCount} = payload;
+                this.title = title;
+                this.userName = userName;
+                this.total = displaySeriesContentCount;
+            });
+        }
+
         getNextList() {
-            console.log("getNextList1")
             if (!this.isRunning()) {
                 return;
             }
             this.step = "list";
             this.setParams();
-            console.log("getNextList2")
 
             this.promise = this.getList()
                 .then(({data = [], total}) => {
+                    console.log("data:")
                     console.log(data)
                     this.checkRunning();
 
@@ -1000,7 +1042,6 @@ jQuery(function ($) {
                     this.getWorks();
                 })
                 .catch(this.errorHandler);
-            console.log("getNextList3")
         }
 
         getWorks() {
@@ -1024,7 +1065,6 @@ jQuery(function ($) {
 
             this.cancel();
             console.log("working")
-            console.log(ids)
 
             let that = this;
             this.promises = ids.map((id) => {
@@ -1040,9 +1080,12 @@ jQuery(function ($) {
                 })
                     .then(() => {
                         // that.checkRunning();
-                        return that.getWork(id);
+                        let work = that.getWork(id, true)
+                        // console.log(work)
+                        return work;
                     })
                     .then((work) => {
+                        console.log(work)
                         // that.checkRunning();
 
                         that.finished++;
@@ -1055,32 +1098,39 @@ jQuery(function ($) {
                     });
             });
 
-            console.log(this.entries);
-            console.log(this.promises);
-
             let text = "";
             Promise.all(this.promises)
                 .then(() => {
+                    console.log("Promise.all(this.promises).then")
+                    console.log(this.entries)
+                    Object.values(this.entries).forEach(({filename, content})=> {
+                        text += content;
+                    })
+
+                    let filename = `${this.title} 作者：${this.userName} [pixiv][series.${this.id}].txt`
+
+                    saveAs(
+                        new Blob([text], {type: "text/plain;charset=UTF-8"}),
+                        filename
+                    );
+
                     if (!this.isRunning()) {
+                        console.log("return")
                         return;
                     }
-
-                    console.log(this.entries)
-
-                    Object.values(this.entries).forEach(({filename, content}) => {
-                        text += content
-                    });
-
-                    console.log(text)
                 })
                 .catch(this.errorHandler);
 
-            let filename = `${this.title} 作者：${this.userName} [pixiv][series.${this.id}].txt`
-
-            saveAs(
-                new Blob([text], {type: "text/plain;charset=UTF-8"}),
-                filename
-            );
+/*
+            console.log(Object.values(this.entries))
+            Object.values(this.entries).forEach((item) => {
+                console.log(item);
+            })
+            console.log(Object.keys(this.entries))
+            Object.keys(this.entries).forEach((key) => {
+                console.log(key);
+            })
+*/
         }
     }
 
