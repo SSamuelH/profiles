@@ -162,7 +162,7 @@ System.register("./__monkey.entry-DvIOA1Mg.js", ["vue"], function (exports, modu
                 toHandlers = module.toHandlers;
             },
         ],
-        execute: function () {
+        execute: function (value) {
             exports("d", detectDom);
 
             const r = new Set();
@@ -27490,9 +27490,26 @@ Each site adapter provides as many of these variables as possible; the site-spec
                 const files = [];
                 // 下载图片
                 if (!(pending && storage$8.get("downloadOriginalImage"))) {
+
+                    const countMap = {}
+                    const set = new Set()
+
+                    for (const file of data17.post.attachments) {
+                        const postfix = file.path?.substring(file.path?.lastIndexOf(".") + 1)
+                        let count = countMap[postfix] ? countMap[postfix] : 0
+                        count += 1
+                        countMap[postfix] = count
+
+                        set.add(file.path)
+                    }
+
+                    console.log(countMap)
+                    console.log(set)
+                    console.log(data17.post.attachments)
+
                     // 下载封面
                     const cover = data17.post.file;
-                    if (!storage$8.get("noCoverFile") && cover?.path) {
+                    if (!storage$8.get("noCoverFile") && cover?.path && !set.has(cover.path)) {
                         const coverFile = cover;
                         files.push({
                             kind: "download",
@@ -27502,16 +27519,6 @@ Each site adapter provides as many of these variables as possible; the site-spec
                             pIndex: 0,
                         });
                     }
-
-                    let countMap = {}
-                    for (const file of data17.post.attachments) {
-                        const postfix = file.path?.substring(file.path?.lastIndexOf(".") + 1)
-                        let count = countMap[postfix] ? countMap[postfix] : 0
-                        count += 1
-                        countMap[postfix] = count
-                    }
-
-                    console.log(countMap)
 
                     // 文件列表
                     let index = 0;
