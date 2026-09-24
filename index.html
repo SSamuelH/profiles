@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>油猴脚本下载</title>
+    <title>快捷跳转</title>
     <style>
         /* 全局样式重置+基础配置 */
         * {
@@ -111,6 +111,8 @@
         /* 按钮前置图标（区分功能） */
         .view-btn::before { content: "📄 "; }
         .download-btn::before { content: "⬇️ "; }
+        .phone-btn::before { content: "📱 "; }
+        .download-btn::before { content: "⬇️ "; }
         /* 底部提示文字 */
         .tips {
             margin-top: 10px;
@@ -123,22 +125,23 @@
 </head>
 <body>
     <div class="download-container">
-        <h2 class="container-title">📁 油猴脚本下载</h2>
+        <h2 class="container-title">📁 快捷跳转</h2>
         
         <!-- ✅ 多目录分栏核心区域：复制/catalog-item/即可新增目录 -->
         <div class="catalogs-wrap">
-            <!-- 目录1：项目文档（可修改名称+文件） -->
+            <!-- 目录1：HentaiVerse 插件 -->
             <div class="catalog-item">
                 <h3 class="catalog-title">📋 HentaiVerse</h3>
                 <ul class="file-list">
                     <li class="file-item">
                         <a href="HentaiVerse\HentaiVerse汉化.js" class="file-btn download-btn" download>HentaiVerse汉化 下载</a>
-                    <li class="file-item"><a href=".\HentaiVerse\HV_Utils 汉化.js" class="file-btn download-btn" download>工具界面汉化</a></li>
+                    <li class="file-item"><a href=".\HentaiVerse\HV Utils\HVUT_4.2.1_Chn.user.js" class="file-btn download-btn" download>工具界面汉化</a></li>
                     <li class="file-item"><a href=".\HentaiVerse\HV_AutoAttack.js" class="file-btn download-btn" download>自动战斗脚本</a></li>
                     <li class="file-item"><a href=".\HentaiVerse\HV_MyLittlePony.js" class="file-btn download-btn" download>彩虹小马优化</a></li>
                     <li class="file-item"><a href=".\HentaiVerse\HV_战斗日志汉化.js" class="file-btn download-btn" download>战斗日志汉化</a></li>
                 </ul>
             </div>
+            <!-- 目录2：自动战斗配置 -->
             <div class="catalog-item">
                 <h3 class="catalog-title">📋 自动战斗配置</h3>
                 <ul class="file-list">
@@ -153,17 +156,36 @@
                 </ul>
             </div>
 
-            <!-- 目录2：软件安装包（可修改名称+文件） -->
+            <!-- 目录3：Gamemale插件 -->
             <div class="catalog-item">
                 <h3 class="catalog-title">💻 gamemale</h3>
                 <ul class="file-list">
                 </ul>
             </div>
 
-            <!-- 目录3：图片素材（可修改名称+文件） -->
+            <!-- 目录：其他资源 -->
             <div class="catalog-item">
                 <h3 class="catalog-title">🖼️ 资源下载</h3>
                 <ul class="file-list">
+                </ul>
+            </div>
+
+            <!-- 目录：GKD 编辑器 -->
+            <div class="catalog-item">
+                <h3 class="catalog-title">📲 GKD 编辑器</h3>
+                <ul class="file-list">
+                    <li class="file-item">
+                        <a href="http://192.168.31.58:8888/" class="file-btn phone-btn view-btn" target="_blank">Note 12 Turbo</a>
+                    </li>
+                    <li class="file-item">
+                        <a href="http://192.168.31.50:8888/" class="file-btn phone-btn view-btn" target="_blank">S20</a>
+                    </li>
+                    <li class="file-item">
+                        <a href="http://192.168.31.47:8888/" class="file-btn phone-btn view-btn" target="_blank">Y700</a>
+                    </li>
+                    <li class="file-item">
+                        <a href="http://192.168.31.9:8888/" class="file-btn phone-btn view-btn" target="_blank">Pad Pro 12.7</a>
+                    </li>
                 </ul>
             </div>
 
