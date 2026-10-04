@@ -5096,6 +5096,59 @@ try {
         updateTitleWithLock(newRaw);
     }
     // END 在这上面增加新代码
+
+    // ===== 快捷键：' 切换数据汇总面板，ESC 关闭面板 =====
+    function toggleUsagePanel() {
+        let box = gE('#hvAABox');
+        if (!box) {
+            // 面板尚未创建，先创建它
+            optionBox();
+            box = gE('#hvAABox');
+            box.style.display = 'block';
+            // 切换到数据汇总标签
+            const usageMenu = gE('.hvAATabmenu>span[name="Summary"]');
+            usageMenu?.click();
+            return;
+        }
+
+        const usageTab = gE('#hvAATab-Summary');
+        const isVisible = box.style.display !== 'none';
+        const isUsageActive = usageTab && usageTab.style.display === 'block';
+
+        if (isVisible && isUsageActive) {
+            // 当前正在显示数据汇总面板，关闭
+            box.style.display = 'none';
+        } else {
+            // 打开并切换到数据汇总
+            box.style.display = 'block';
+            const usageMenu = gE('.hvAATabmenu>span[name="Summary"]');
+            usageMenu?.click();
+        }
+    }
+
+    document.addEventListener('keydown', (e) => {
+        // ESC 键：无论焦点在哪，都尝试关闭面板
+        if (e.key === 'Escape') {
+            const box = gE('#hvAABox');
+            if (box && box.style.display !== 'none') {
+                box.style.display = 'none';
+            }
+            return;
+        }
+
+        // 在输入框/文本域内时不触发 ' 键快捷键
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+            return;
+        }
+
+        // ' 键：切换数据汇总面板
+        if (e.key === "'") {
+            e.preventDefault();
+            toggleUsagePanel();
+        }
+    }, false);
+    // ===== 快捷键结束 =====
+
 } catch (e) {
     console.log(e);
     document.title = e;
