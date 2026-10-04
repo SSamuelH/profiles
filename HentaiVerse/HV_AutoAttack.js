@@ -4975,7 +4975,7 @@ try {
         if(key === "_startTime" || key === "_endTime" || key === "#startTime" || key === "#endTime") {
             style = 'font-size:10px;'
         }
-        if(key === "_round" || key === "costTime") {
+        if(key === "_round" || key === "costTime" || key === "#Token of Blood") {
             style = 'font-weight:bold;color:#2F4F4F;'
         }
         if(key.startsWith("Health ")) {
