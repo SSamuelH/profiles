@@ -338,7 +338,7 @@ try {
                 // console.log(g('battle'))
                 if(g('battle')) {
                     let battleCode = `${time(1)}: ${g('battle')?.roundType?.toUpperCase()}-${g('battle')?.roundAll}`
-                    console.log("battleCode is ", battleCode)
+                    // console.log("battleCode is ", battleCode)
                     setValue('battleCode', battleCode);
                     setValue('roundType', g('battle')?.roundType?.toUpperCase());
                 } else {
@@ -688,6 +688,28 @@ try {
         }
         for (let item of itemMap[key]) {
             delValue(item);
+        }
+    }
+
+    function delRecordBefore3Day(key) { // 删除三日前数据
+        let date = new Date();
+        date.setUTCDate(date.getUTCDate() - 3);
+        date.setUTCHours(0)
+        date.setUTCMinutes(0)
+        date.setUTCSeconds(0)
+
+        if (standalone.includes(key)) {
+            key = `${current}_${key}`;
+        }
+        const rec = getValue(key, true)
+        if(rec) {
+            if(key.indexOf('stats') >= 0) {
+                const newStats = rec.filter(item => (new Date(item.self._startTime)).getTime() - date.getTime() > 0);
+                setValue(key, newStats)
+            } else if(key.indexOf('drop') >= 0) {
+                const newDrop = rec.filter(item => (new Date(item['#startTime'])).getTime() - date.getTime() > 0);
+                setValue(key, newDrop)
+            }
         }
     }
 
@@ -1286,8 +1308,8 @@ try {
             '  <span class="hvAATitle"><l0>数据记录</l0><l1>數據記錄</l1><l2>Usage Tracking</l2></span><button class="reRecordUsage"><l01>重置</l01><l2>Reset</l2></button>',
             '  <table></table></div>',
             '<div class="hvAATab hvAACenter" id="hvAATab-Summary">',
-            '  <span class="hvAATitle"><l0>数据汇总</l0><l1>數據汇总</l1><l2>Summary</l2></span></button>',
-            '  <table></table></div>',
+            '  <span class="hvAATitle"><l0>数据汇总</l0><l1>數據汇总</l1><l2>Summary</l2></span><button class="resetAllRecord" style="margin-left:5px;"><l01>重置</l01><l2>Reset</l2></button><button class="delRecordBefore3Day" style="margin-left:5px;"><l01>保留三日</l01><l2>Reset 3</l2></button>',
+            '  <table style="margin-top:5px;"></table></div>',
 
             '<div class="hvAATab hvAACenter" id="hvAATab-Tools">',
             '  <div><span class="hvAATitle"><l0>当前状况</l0><l1>當前狀況</l1><l2>Current status</l2></span>: ',
@@ -1462,7 +1484,11 @@ try {
                         if(i.startsWith("Health ") || i.startsWith("Mana ") || i.startsWith("Spirit ")
                             || i == "Token of Blood" || i == "Soul Fragments"|| i == "#Credit" || i == "World Seed"
                         ) {
-                            newDrops[i] = drop[i]
+                            if(i == "Token of Blood") {
+                                newDrops["#" + i] = drop[i]
+                            } else {
+                                newDrops[i] = drop[i]
+                            }
                         }
                     })
                     if(Object.keys(newDrops).length > 0) {
@@ -1790,6 +1816,32 @@ try {
             if (_alert(1, '是否重置', '是否重置', 'Whether to reset')) {
                 delValue('stats');
                 delValue('statsOld');
+            }
+        };
+        // 标签页-数据汇总-全部重置
+        gE('.resetAllRecord', optionBox).onclick = function () {
+            if (_alert(1, '是否重置', '是否重置', 'Whether to reset')) {
+                console.log(getValue('stats', true))
+                console.log(getValue('statsOld', true))
+                console.log(getValue('drop', true))
+                console.log(getValue('dropOld', true))
+                // delValue('stats');
+                // delValue('statsOld');
+                // delValue('drop');
+                // delValue('dropOld');
+            } else {
+
+            }
+        };
+        // 标签页-数据汇总-全部重置
+        gE('.delRecordBefore3Day', optionBox).onclick = function () {
+            if (_alert(1, '是否重置', '是否重置', 'Whether to reset')) {
+                console.log(getValue('statsOld', true))
+                console.log(getValue('dropOld', true))
+                delRecordBefore3Day('statsOld')
+                delRecordBefore3Day('dropOld')
+            } else {
+
             }
         };
         // 标签页-关于本脚本
@@ -4821,7 +4873,7 @@ try {
 
             // 两天不同，写入数据
             if(lastStatDay !== thisDay) {
-                console.log("StatDay is : ", lastStatDay);
+                // console.log("StatDay is : ", lastStatDay);
                 if(newDrop) {
                     DropsNew.push(newDrop)
                 }
@@ -4874,8 +4926,8 @@ try {
 
             // 两天不同，写入数据
             if(lastStatDay !== thisDay) {
-                console.log("StatDay is : ", lastStatDay);
-                console.log(newStat);
+                // console.log("StatDay is : ", lastStatDay);
+                // console.log(newStat);
                 if(newStat) {
                     statsNew.push(newStat)
                 }
