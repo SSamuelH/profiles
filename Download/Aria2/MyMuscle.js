@@ -21,7 +21,7 @@
 // @resource buttonCSS https://raw.githubusercontent.com/SSamuelH/profiles/refs/heads/main/deps/css/button.css
 // ==/UserScript==
 
-const downloadPath = "E:\\Downloads\\Default\\Other\\phvideo\\";
+const downloadPath = "E:\\Downloads\\Other\\phvideo\\";
 
 (function () {
     const direct_num = 100000;
@@ -57,7 +57,7 @@ const downloadPath = "E:\\Downloads\\Default\\Other\\phvideo\\";
             let title = RegExp.$3;
 
             // 生成内容
-            let text = title + " (" + num + ") - MyMusclevideo.com \n" +
+            let text = transfer(title) + " (" + num + ") - MyMusclevideo.com \n" +
                 "https://video314.mymusclevideo.com/mmv//media/videos/mp4/" + num + ".mp4\n" +
                 "https://video314.mymusclevideo.com/mmv//media/videos/mp4/" + num + "_240p.mp4\n" +
                 "https://video314.mymusclevideo.com/mmv//media/videos/mp4/" + num + "_360p.mp4\n" +
@@ -122,7 +122,7 @@ const downloadPath = "E:\\Downloads\\Default\\Other\\phvideo\\";
 
     async function copying(title, num) {
         let text = `#O,${downloadPath}\n`
-        let filename = title + " (" + num + ") - MyMusclevideo.com";
+        let filename = transfer(title) + " (" + num + ") - MyMusclevideo.com";
         let url = "";
         Toast(`正在复制中…… (${num}) [${title}]`)
 
@@ -147,7 +147,7 @@ const downloadPath = "E:\\Downloads\\Default\\Other\\phvideo\\";
     }
 
     async function check(title, num) {
-        let filename = title + " (" + num + ") - MyMusclevideo.com";
+        let filename = transfer(title) + " (" + num + ") - MyMusclevideo.com";
         let urls = []
         // 如果是旧的
         if(num < direct_num) {
