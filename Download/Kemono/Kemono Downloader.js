@@ -31551,7 +31551,7 @@ Each site adapter provides as many of these variables as possible; the site-spec
                         this.context.app = app2;
                         this.context.mountTarget = mountTarget;
 
-                        // 文本下载切换
+                        // 文本下载切换 start
                         // 在 mountDownloadButton 之后
                         const toggleContainer = $CrE("span", {
                             styles: "padding:12px 20px;font-weight: bold;display: inline-flex;",
@@ -31560,8 +31560,8 @@ Each site adapter provides as many of these variables as possible; the site-spec
                         mountTarget.appendChild(toggleContainer);
 
                         const textContentStorage = globalStorage.withKeys("downloader");
-                        const enabled = ref(textContentStorage.get("textContent") === "txt");
-                        textContentStorage.watch("textContent", (_k, _o, v) => (enabled.value = v === "txt"));
+                        const textContentEnabled = ref(textContentStorage.get("textContent") === "txt");
+                        textContentStorage.watch("textContent", (_k, _o, v) => (textContentEnabled.value = v === "txt"));
 
                         const ToggleComp = defineComponent({
                             setup() {
@@ -31569,11 +31569,11 @@ Each site adapter provides as many of these variables as possible; the site-spec
                                     class: "cursor-pointer",
                                     style: "",
                                     onClick: () => {
-                                        const nv = enabled.value ? "none" : "txt";
-                                        enabled.value = !enabled.value;
+                                        const nv = textContentEnabled.value ? "none" : "txt";
+                                        textContentEnabled.value = !textContentEnabled.value;
                                         textContentStorage.set("textContent", nv);
                                     },
-                                }, enabled.value ? "📄 文字:开" : "📄 文字:关");
+                                }, textContentEnabled.value ? "📄 文字:开" : "文字:关");
                             },
                         });
 
@@ -31584,6 +31584,42 @@ Each site adapter provides as many of these variables as possible; the site-spec
                         // 保存到 context，leave() 时卸载
                         this.context.toggleContainer = toggleHost;
                         this.context.toggleApp = toggleApp;
+                        // 文本下载切换 end
+
+                        // 原图下载切换 start
+                        const toggleContainer2 = $CrE("span", {
+                            styles: "padding:12px 20px;font-weight: bold;display: inline-flex;",
+                            classes: "button",
+                        });
+                        mountTarget.appendChild(toggleContainer2);
+
+                        const originalImageStorage = globalStorage.withKeys("downloader");
+                        const originalImageEnabled = ref(originalImageStorage.get("downloadOriginalImage"));
+                        originalImageStorage.watch("downloadOriginalImage", (_k, _o, v) => (originalImageEnabled.value = v));
+
+                        const ToggleComp2 = defineComponent({
+                            setup() {
+                                return () => h$2("span", {
+                                    class: "cursor-pointer",
+                                    style: "",
+                                    onClick: () => {
+                                        console.log("原图下载切换中ing")
+                                        originalImageEnabled.value = !originalImageEnabled.value;
+                                        const nv = originalImageEnabled.value;
+                                        originalImageStorage.set("downloadOriginalImage", nv);
+                                    },
+                                }, originalImageEnabled.value ? "🖼 原图:开" : "原图:关");
+                            },
+                        });
+
+                        const {host: toggleHost2, app: toggleApp2} = createShadowApp(ToggleComp2, {
+                            host: toggleContainer2,
+                            options: {app: {classes: page4.mount.appClasses ?? []}},
+                        });
+                        // 保存到 context，leave() 时卸载
+                        this.context.toggleContainer2 = toggleHost2;
+                        this.context.toggleApp2 = toggleApp2;
+                        // 原图下载切换 end
 
                     },
                     leave() {
