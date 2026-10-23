@@ -24615,6 +24615,7 @@ Each site adapter provides as many of these variables as possible; the site-spec
                     filenameBySite: {},
                     noCoverFile: false,
                     downloadOriginalImage: true,
+                    downloadAttachments: true,
                     abortFiles: "prompt",
                     concurrent: 5,
                     textContent: "none",
@@ -27526,20 +27527,23 @@ Each site adapter provides as many of these variables as possible; the site-spec
                         const postfix = file.path?.substring(file.path?.lastIndexOf(".") + 1)
 
                         const isZIP = postfix.endsWith("zip")
-                        let pIndex = ""
-                        // 不是压缩文件 且 同格式不是只有一个文件
-                        if(!isZIP && countMap[postfix] !== 1) {
-                            index += 1;
-                            pIndex = index;
-                        }
 
-                        files.push({
-                            kind: "download",
-                            name: file.name ?? file.path.substring(file.path.lastIndexOf("/") + 1),
-                            path: file.path,
-                            url: family.assets.fullFile(file, data17),
-                            pIndex : pIndex
-                        });
+                        if(!isZIP || storage$8.get("downloadAttachments")) {
+                            let pIndex = ""
+                            // 不是压缩文件 且 同格式不是只有一个文件
+                            if(!isZIP && countMap[postfix] !== 1) {
+                                index += 1;
+                                pIndex = index;
+                            }
+
+                            files.push({
+                                kind: "download",
+                                name: file.name ?? file.path.substring(file.path.lastIndexOf("/") + 1),
+                                path: file.path,
+                                url: family.assets.fullFile(file, data17),
+                                pIndex : pIndex
+                            });
+                        }
                     }
                 }
 
@@ -31621,6 +31625,40 @@ Each site adapter provides as many of these variables as possible; the site-spec
                         this.context.toggleApp2 = toggleApp2;
                         // 原图下载切换 end
 
+                        // 附件下载切换 start
+                        const toggleContainer3 = $CrE("span", {
+                            styles: "padding:12px 20px;font-weight: bold;display: inline-flex;",
+                            classes: "button",
+                        });
+                        mountTarget.appendChild(toggleContainer3);
+
+                        const attachmentsStorage = globalStorage.withKeys("downloader");
+                        const attachmentsEnabled = ref(attachmentsStorage.get("downloadAttachments"));
+                        attachmentsStorage.watch("downloadAttachments", (_k, _o, v) => (attachmentsEnabled.value = v));
+
+                        const ToggleComp3 = defineComponent({
+                            setup() {
+                                return () => h$2("span", {
+                                    class: "cursor-pointer",
+                                    style: "",
+                                    onClick: () => {
+                                        console.log("附件下载切换中ing")
+                                        attachmentsEnabled.value = !attachmentsEnabled.value;
+                                        const nv = attachmentsEnabled.value;
+                                        attachmentsStorage.set("downloadAttachments", nv);
+                                    },
+                                }, attachmentsEnabled.value ? "📦 附件:开" : "附件:关");
+                            },
+                        });
+
+                        const {host: toggleHost3, app: toggleApp3} = createShadowApp(ToggleComp3, {
+                            host: toggleContainer3,
+                            options: {app: {classes: page4.mount.appClasses ?? []}},
+                        });
+                        // 保存到 context，leave() 时卸载
+                        this.context.toggleContainer3 = toggleHost3;
+                        this.context.toggleApp3 = toggleApp3;
+                        // 附件下载切换 end
                     },
                     leave() {
                         this.context.generation++;
@@ -31683,7 +31721,7 @@ Each site adapter provides as many of these variables as possible; the site-spec
                     return `https://img.${location.host}/thumbnail/data${path}`;
                 },
                 fullFile(file, data17) {
-                    if (storage$3.get("downloadOriginalImage")) {
+                    if (storage$3.get("downloadOriginalImage") && !file.preview_only) {
                         const preview = data17.previews?.find((p2) => p2.path === file.path);
                         const server = preview?.server ?? `https://n1.${location.host}`;
                         return `${server}/data${file.path}`;
@@ -31740,7 +31778,7 @@ Each site adapter provides as many of these variables as possible; the site-spec
                     return `https://img.${location.host}/thumbnail/data${path}`;
                 },
                 fullFile(file, _data) {
-                    return storage$2.get("downloadOriginalImage") ? `https://file.${location.host}/data${file.path}` : `https://img.${location.host}/thumbnail/data${file.path}`;
+                    return storage$2.get("downloadOriginalImage") && !file.preview_only ? `https://file.${location.host}/data${file.path}` : `https://img.${location.host}/thumbnail/data${file.path}`;
                 },
             };
             const api = createPostsApi(normalizePost);
