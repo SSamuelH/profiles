@@ -27283,6 +27283,7 @@ Each site adapter provides as many of these variables as possible; the site-spec
                 template = template ?? storage$9.get("filename");
                 const merged = {};
                 for (const meta of metaChain) Object.assign(merged, meta);
+                // file.thumbnail ? origName.replace() : origName
                 const origName = file ? (file.name ?? (file.path ? file.path.substring(file.path.lastIndexOf("/") + 1) : null)) : null;
                 const dotIndex = origName?.lastIndexOf(".") ?? null;
                 const templateData = Object.assign(Object.fromEntries(RECOMMENDED_META_KEYS.map((key) => [key, void 0])), merged, {
@@ -27331,8 +27332,12 @@ Each site adapter provides as many of these variables as possible; the site-spec
                     rules.push({search: raw, replace: strVal});
                 }
                 let filepath = safeBatchReplace(template, rules);
+                // console.log(file.thumbnail, filepath)
                 filepath = filepath.replaceAll(/(^|[/\\])[ .]+/g, "$1").replaceAll(/[ .]+(^|[/\\])/g, "$1");
                 filepath = filepath.replaceAll(/\s+/g, " ");
+                if(file.thumbnail) {
+                    filepath = filepath.substring(0, filepath.lastIndexOf('\\')).concat('\\thumbnail').concat(filepath.substring(filepath.lastIndexOf('\\')))
+                }
                 return filepath;
             }
 
@@ -27484,11 +27489,14 @@ Each site adapter provides as many of these variables as possible; the site-spec
                 if (pending && family.capabilities.pendingPosts === "skip") {
                     resource.available = false;
                     resource.files = [];
+                    resource.thumbnails = [];
                     return;
                 }
                 resource.name = data17.post.title;
                 resource.meta = buildPostMeta(data17, creator);
                 const files = [];
+                const thumbnails = [];
+
                 // 下载图片
                 if (!(pending && storage$8.get("downloadOriginalImage"))) {
 
@@ -27530,21 +27538,38 @@ Each site adapter provides as many of these variables as possible; the site-spec
 
                         if(!isZIP || storage$8.get("downloadAttachments")) {
                             let pIndex = ""
+                            let tpIndex = ""
                             // 不是压缩文件 且 同格式不是只有一个文件
                             if(!isZIP && countMap[postfix] !== 1) {
                                 index += 1;
                                 pIndex = index;
+                                tpIndex = index;
                             }
 
-                            files.push({
+                            // 原图
+                            if(storage$8.get("downloadOriginalImage")) {
+                                files.push({
+                                    kind: "download",
+                                    name: file.name ?? file.path.substring(file.path.lastIndexOf("/") + 1),
+                                    path: file.path,
+                                    url: family.assets.fullFile(file, data17),
+                                    pIndex : pIndex
+                                });
+                            }
+
+                            // 缩略图
+                            thumbnails.push({
                                 kind: "download",
                                 name: file.name ?? file.path.substring(file.path.lastIndexOf("/") + 1),
                                 path: file.path,
-                                url: family.assets.fullFile(file, data17),
-                                pIndex : pIndex
+                                url: family.assets.thumbnail(file.path),
+                                pIndex : tpIndex,
+                                thumbnail : true
                             });
                         }
                     }
+                    console.log(files)
+                    console.log(thumbnails)
                 }
 
                 // 下载文本内容
@@ -27561,7 +27586,8 @@ Each site adapter provides as many of these variables as possible; the site-spec
                     });
                 }
                 resource.files = files;
-                resource.available = pending ? files.length > 0 : true;
+                resource.thumbnails = thumbnails;
+                resource.available = pending ? files.length > 0 || thumbnails.length > 0 : true;
             }
 
             const _hoisted_1$A = ["innerHTML"];
@@ -27728,6 +27754,11 @@ Each site adapter provides as many of these variables as possible; the site-spec
                             // buildDownloadTarget(file, metaChain, p, this.options.template)
                             this.subTasks.push(this.options.fileTaskFactory(this, buildDownloadTarget(file, metaChain, p, this.options.template)));
                         });
+                        this.resource.thumbnails?.forEach((file, i2) => {
+                            const p = file.pIndex;
+                            // buildDownloadTarget(file, metaChain, p, this.options.template)
+                            this.subTasks.push(this.options.fileTaskFactory(this, buildDownloadTarget(file, metaChain, p, this.options.template)));
+                        });
                         this.resource.children?.forEach((child) => {
                             this.subTasks.push(new BaseResourceTask(this, child, this.options));
                         });
@@ -27809,6 +27840,7 @@ Each site adapter provides as many of these variables as possible; the site-spec
                 }
             }
 
+            // 构建下载模板
             function buildDownloadTarget(file, metaChain, p2, template) {
                 const path = constructFilename(metaChain, file, p2, template);
                 console.log(path)
@@ -31721,7 +31753,7 @@ Each site adapter provides as many of these variables as possible; the site-spec
                     return `https://img.${location.host}/thumbnail/data${path}`;
                 },
                 fullFile(file, data17) {
-                    if (storage$3.get("downloadOriginalImage") && !file.preview_only) {
+                    if (storage$3.get("downloadOriginalImage")) {
                         const preview = data17.previews?.find((p2) => p2.path === file.path);
                         const server = preview?.server ?? `https://n1.${location.host}`;
                         return `${server}/data${file.path}`;
@@ -31778,7 +31810,7 @@ Each site adapter provides as many of these variables as possible; the site-spec
                     return `https://img.${location.host}/thumbnail/data${path}`;
                 },
                 fullFile(file, _data) {
-                    return storage$2.get("downloadOriginalImage") && !file.preview_only ? `https://file.${location.host}/data${file.path}` : `https://img.${location.host}/thumbnail/data${file.path}`;
+                    return storage$2.get("downloadOriginalImage") && file.temp_url ? file.temp_url : `https://img.${location.host}/thumbnail/data${file.path}`;
                 },
             };
             const api = createPostsApi(normalizePost);
