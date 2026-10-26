@@ -25175,7 +25175,7 @@ Each site adapter provides as many of these variables as possible; the site-spec
                 __name: "InputNumber",
                 setup(__props) {
                     const theme2 = ref({
-                        root: `inline-flex relative 
+                        root: `inline-flex relative
         p-vertical:flex-col p-fluid:w-full`,
                         pcInputText: {
                             root: `appearance-none rounded-md outline-hidden flex-auto
@@ -25183,10 +25183,10 @@ Each site adapter provides as many of these variables as possible; the site-spec
         p-filled:bg-surface-50 dark:p-filled:bg-surface-800
         text-surface-700 dark:text-surface-0
         placeholder:text-surface-500 dark:placeholder:text-surface-400
-        border border-surface-300 dark:border-surface-700 
+        border border-surface-300 dark:border-surface-700
         enabled:hover:border-surface-400 dark:enabled:hover:border-surface-600
         enabled:focus:border-primary
-        disabled:bg-surface-200 disabled:text-surface-500 
+        disabled:bg-surface-200 disabled:text-surface-500
         dark:disabled:bg-surface-700 dark:disabled:text-surface-400
         p-invalid:border-red-400 dark:p-invalid:border-red-300
         p-invalid:placeholder:text-red-600 dark:p-invalid:placeholder:text-red-400
@@ -27535,6 +27535,7 @@ Each site adapter provides as many of these variables as possible; the site-spec
                         const postfix = file.path?.substring(file.path?.lastIndexOf(".") + 1)
 
                         const isZIP = postfix.endsWith("zip")
+                        const isMP4 = postfix.endsWith("mp4") || postfix.endsWith("gif")
 
                         if(!isZIP || storage$8.get("downloadAttachments")) {
                             let pIndex = ""
@@ -27558,14 +27559,16 @@ Each site adapter provides as many of these variables as possible; the site-spec
                             }
 
                             // 缩略图
-                            thumbnails.push({
-                                kind: "download",
-                                name: file.name ?? file.path.substring(file.path.lastIndexOf("/") + 1),
-                                path: file.path,
-                                url: family.assets.thumbnail(file.path),
-                                pIndex : tpIndex,
-                                thumbnail : true
-                            });
+                            if(!isMP4 && !isZIP) {
+                                thumbnails.push({
+                                    kind: "download",
+                                    name: file.name ?? file.path.substring(file.path.lastIndexOf("/") + 1),
+                                    path: file.path,
+                                    url: family.assets.thumbnail(file.path),
+                                    pIndex : tpIndex,
+                                    thumbnail : true
+                                });
+                            }
                         }
                     }
                     console.log(files)
@@ -28936,7 +28939,7 @@ Each site adapter provides as many of these variables as possible; the site-spec
                     const theme2 = ref({
                         root: `relative overflow-hidden h-5 bg-surface-200 dark:bg-surface-700 rounded-md`,
                         value: `m-0 bg-primary
-        p-determinate:h-full p-determinate:w-0 p-determinate:absolute p-determinate:flex p-determinate:items-center p-determinate:justify-center 
+        p-determinate:h-full p-determinate:w-0 p-determinate:absolute p-determinate:flex p-determinate:items-center p-determinate:justify-center
         p-determinate:overflow-hidden p-determinate:transition-[width] p-determinate:duration-1000 p-determinate:ease-in-out
         p-indeterminate:before:content-[''] p-indeterminate:before:absolute p-indeterminate:before:bg-inherit p-indeterminate:before:top-0 p-indeterminate:before:start-0 p-indeterminate:before:bottom-0 p-indeterminate:before:will-change-[inset-inline-start,inset-inline-end]
         p-indeterminate:before:animate-[p-progressbar-indeterminate-anim_2.1s_cubic-bezier(0.65,0.815,0.735,0.395)_infinite]
@@ -29035,8 +29038,8 @@ Each site adapter provides as many of these variables as possible; the site-spec
                 __name: "Menu",
                 setup(__props, {expose: __expose}) {
                     const theme2 = ref({
-                        root: `bg-surface-0 dark:bg-surface-900 
-        text-surface-700 dark:text-surface-0 
+                        root: `bg-surface-0 dark:bg-surface-900
+        text-surface-700 dark:text-surface-0
         border border-solid border-surface-200 dark:border-surface-700
         rounded-md min-w-52
         p-popup:shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-2px_rgba(0,0,0,0.1)]`,
@@ -31753,9 +31756,11 @@ Each site adapter provides as many of these variables as possible; the site-spec
                     return `https://img.${location.host}/thumbnail/data${path}`;
                 },
                 fullFile(file, data17) {
-                    if (storage$3.get("downloadOriginalImage")) {
+                    console.log(file)
+                    console.log(data17)
+                    if (file.name.endsWith('mp4') || file.name.endsWith('zip') || storage$3.get("downloadOriginalImage")) {
                         const preview = data17.previews?.find((p2) => p2.path === file.path);
-                        const server = preview?.server ?? `https://n1.${location.host}`;
+                        const server = preview?.server ?? `https://file.${location.host}`;
                         return `${server}/data${file.path}`;
                     } else {
                         return `https://img.${location.host}/thumbnail/data${file.path}`;
@@ -31810,6 +31815,10 @@ Each site adapter provides as many of these variables as possible; the site-spec
                     return `https://img.${location.host}/thumbnail/data${path}`;
                 },
                 fullFile(file, _data) {
+                    if(file.name.endsWith("mp4")) {
+                        const server = `https://file.${location.host}`;
+                        return `${server}/data${file.path}`;
+                    }
                     return storage$2.get("downloadOriginalImage") && file.temp_url ? file.temp_url : `https://img.${location.host}/thumbnail/data${file.path}`;
                 },
             };
