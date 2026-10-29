@@ -31815,11 +31815,10 @@ Each site adapter provides as many of these variables as possible; the site-spec
                     return `https://img.${location.host}/thumbnail/data${path}`;
                 },
                 fullFile(file, _data) {
-                    if(file.name.endsWith("mp4")) {
-                        const server = `https://file.${location.host}`;
-                        return `${server}/data${file.path}`;
+                    if(file.name.endsWith("mp4") || file.name.endsWith("zip")) {
+                        return `https://file.${location.host}/data${file.path}`;
                     }
-                    return storage$2.get("downloadOriginalImage") && file.temp_url ? file.temp_url : `https://img.${location.host}/thumbnail/data${file.path}`;
+                    return file.temp_url ? file.temp_url : storage$2.get("downloadOriginalImage") ? `https://file.${location.host}/data${file.path}` :`https://img.${location.host}/thumbnail/data${file.path}`;
                 },
             };
             const api = createPostsApi(normalizePost);
